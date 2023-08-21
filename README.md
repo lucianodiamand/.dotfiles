@@ -2,4 +2,4 @@
 My personal dot files
 
 # To install run:
-```stow alacrity fish bin```
+```stow i3 alacrity fish bin```
