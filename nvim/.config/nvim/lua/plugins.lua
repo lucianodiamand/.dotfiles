@@ -9,9 +9,15 @@ end
 -- Only required if you have packer configured as `opt`
 vim.cmd [[packadd packer.nvim]]
 
-return packer.startup(function(use)
+packer.startup(function(use)
   -- Packer can manage itself
   use 'wbthomason/packer.nvim'
 
+  use {
+    'lucianodiamand/neosolarized.nvim',
+    --commit = '3dd9dda', -- Doesn't work
+    --commit = '6848ba4', -- Work
+    requires = { 'tjdevries/colorbuddy.nvim' }
+  }
 end)
 
