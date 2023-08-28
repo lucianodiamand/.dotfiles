@@ -19,5 +19,9 @@ packer.startup(function(use)
     --commit = '6848ba4', -- Work
     requires = { 'tjdevries/colorbuddy.nvim' }
   }
+
+  -- Statusline
+  use 'hoob3rt/lualine.nvim'
+
 end)
 
