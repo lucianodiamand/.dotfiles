@@ -1,4 +1,3 @@
-
 local success, nvim_lsp = pcall(require, 'lspconfig')
 if (not success) then return end
 
@@ -12,9 +11,11 @@ local on_attach = function(client, bufnr)
     vim.api.nvim_command [[augroup Format]]
     vim.api.nvim_command [[autocmd! * <buffer>]]
     vim.api.nvim_command [[autocmd BufWritePre <buffer> lua vim.lsp.buf.formatting_seq_sync()]]
-    vim.api.nvim_command [[autogroup END]]
+    vim.api.nvim_command [[augroup END]]
   end
 end
+
+-- LSP servers
 
 nvim_lsp.tsserver.setup {
   on_attach = on_attach,
@@ -33,9 +34,9 @@ nvim_lsp.lua_ls.setup {
 
       workspace = {
         -- Make the server aware of Neovim runtime files
-        library = vim.api.nvim_get_runtime_file('', true)
+        library = vim.api.nvim_get_runtime_file('', true),
+        checkThirdParty = false
       }
     }
   }
 }
-
