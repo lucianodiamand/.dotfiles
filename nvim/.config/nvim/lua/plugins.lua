@@ -25,4 +25,3 @@ packer.startup(function(use)
   -- LSP
   use 'neovim/nvim-lspconfig'
 end)
-
