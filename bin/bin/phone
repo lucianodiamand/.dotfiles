@@ -1,0 +1,4 @@
+#!/bin/sh
+
+# This shell script search a phone number in Paginas Blancas
+curl -s -X GET http://www.paginasblancas.com.ar/telefono/$1 | html2text | fgrep '****' | tail -n 2
