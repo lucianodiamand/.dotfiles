@@ -200,6 +200,7 @@ bar {
 #assign [class="meld"]             $ws8
 #assign [class="Nyxt"]             $ws2
 for_window [class="firefox"] move to workspace $ws2
+for_window [class="Vieb"] move to workspace $ws2
 for_window [class="code"] move to workspace $ws3
 for_window [class="meld"] move to workspace $ws8
 for_window [class="Tor Browser"] move to workspace $ws7
