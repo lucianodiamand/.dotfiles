@@ -41,9 +41,9 @@
 			  (specification->package "st")
 			  (specification->package "rxvt-unicode")
 			  (specification->package "glibc-locales")
+			  ;; Files that we need to use in the dotfiles
 			  (specification->package "git")
 			  (specification->package "unzip")
-			  (specification->package "meld")
 			  (specification->package "stow")
 			  (specification->package "fish")
 			  (specification->package "nss-certs"))
