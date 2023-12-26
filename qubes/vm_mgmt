@@ -1,0 +1,298 @@
+#!/bin/bash
+
+# vm_mgmt
+#
+# Bash script to create and update templates and their concomitant appVMs.
+#
+# Usage: run in dom0
+#
+# TODO: fix qvm-clone: error: Logical Volumne "..." already exists in volume group "..."
+
+DISTRO_NAME=debian
+RELEASE_NUMBER=12
+MASTERTEMPLATE=${DISTRO_NAME}-${RELEASE_NUMBER} #-minimal
+CONFIGDIR=${HOME}/config
+DEBUG=1
+INCOMING=${HOME}/QubesIncoming
+DOTFILES=https://github.com/lucianodiamand/.dotfiles
+APT_OPTIONS=DEBIAN_FRONTEND=noninteractive
+
+
+function print_help() {
+    echo "Usage: vm_mgmt (-c | -u | -d) -v VMNAME"
+    echo "  where VNAME is l2-dev"
+    exit 1
+}
+
+
+function check_master_template () {
+    # check if master template exists
+    if [ $DEBUG ]; then echo "--check_master_template: templatename:$MASTERTEMPLATE"; fi
+
+    qvm-check --template $MASTERTEMPLATE
+    if [ "$?" -ne 0 ]; then
+	echo "Downloading master template $MASTERTEMPLATE"
+	sudo qubes-dom0-update qubes-template-$MASTERTEMPLATE
+    else
+	echo "Master template present..."
+    fi
+}
+
+
+function delete_vm () {
+    local vmname=$1
+    qvm-remove $vmname
+    if [ "$?" -ne 0 ]; then exit 1; fi
+}
+
+
+function check_vm () {
+    # check if vm exists - delete or exit
+    local vmname=$1
+    if [ $DEBUG ]; then echo "--check_vm: vmname:$vmname"; fi
+    
+    #qvm-ls -O NAME | grep $vmname
+    qvm-check $vmname
+    if [ "$?" -eq 0 ]; then
+        read -p "  delete (n/Y)?" R
+        if [ "$R" == "Y" ]; then 
+	    delete_vm $vmname
+        else
+            echo "Exiting..."
+            exit 1
+        fi
+    fi
+}
+
+
+function config_user () {
+    local appvm=$1
+    if [ $DEBUG ]; then echo "--config_user APPVM:$appvm"; fi
+    
+    qvm-start $appvm
+    qvm-run -p $appvm "git clone ${DOTFILES}"
+    qvm-run -p $appvm "mkdir ${HOME}/bin"
+    #qvm-copy-to-vm $appvm ${CONFIGDIR}/${appvm}/_vimrc
+    qvm-run -p $appvm "rm -rf $INCOMING"
+}
+
+
+function update_template () {
+    local template=$1
+    if [ $DEBUG ]; then echo "--update_template: template:$template"; fi
+
+    qvm-run -p $template "sudo ${APT_OPTIONS} apt-get -y update"
+    qvm-run -p $template "sudo ${APT_OPTIONS} apt-get -y dist-upgrade"
+    qvm-run -p $template "sudo ${APT_OPTIONS} apt-get -y autoremove"
+}
+
+
+function install_software () {
+    local template=$1
+    local software=$2
+    if [ $DEBUG ]; then echo "--install_software: template:$template, software:$software"; fi
+
+    softwarelist=$(echo $software | tr '&' ' ')
+
+    local command="qvm-run -p $template \"sudo ${APT_OPTIONS} apt-get -y install $softwarelist"\"
+    eval $command
+}
+
+
+function create_template () {
+    local template=$1
+    local software=$2
+    if [ $DEBUG ]; then echo "--create_template : TEMPLATE:$template, SOFTWARE:$software"; fi
+
+    check_master_template
+    qvm-clone $MASTERTEMPLATE $template
+    qvm-start $template
+    update_template $template
+    install_software $template $software
+    qvm-sync-appmenus $template
+    qvm-shutdown $template
+}
+
+
+function create_l2-dev_appvms() {
+    local template=$1
+    local appvm=$2
+
+    if [ "$DEBUG" ]; then echo "--create_l2-dev_appvms TEMPLATE:$template, APPVM:$appvm"; fi
+    check_vm $appvm
+
+    qvm-create --class AppVM --template $template --label yellow --prop=maxmem=8192 --prop=memory=1024 $appvm
+    qvm-volume extend $appvm:private 10240mb
+
+    qvm-start $appvm
+    if [ "$DEBUG" ]; then echo "--create_l2-dev_appvms configuring client"; fi
+
+    qvm-copy-to-vm $appvm ${CONFIGDIR}/${appvm}/configure_client
+    echo -e "\n  configuring $appvm: install nvm, node, angular/cli"
+    qvm-run $appvm "chmod +x ${INCOMING}/dom0/configure_client"
+    qvm-run $appvm "${INCOMING}/dom0/configure_client"
+    qvm-run $appvm "rm -rf $INCOMING"
+    qvm-shutdown $appvm 
+}
+
+
+function config_l2-dev_firewall() {
+    local appvm=$1
+
+    if [ "$DEBUG" ]; then echo "--config_l2-dev_firewall APPVM:$appvm"; fi
+
+    qvm-firewall $appvm del --rule-no 0
+    qvm-firewall $appvm add accept dstports=443 dsthost=raw.githubusercontent.com proto=tcp comment="nvm"
+    qvm-firewall $appvm add accept dstports=443 dsthost=github.com proto=tcp comment="nvm"
+    qvm-firewall $appvm add accept dstports=443 dsthost=nodejs.org proto=tcp comment="nvm install"
+    qvm-firewall $appvm add accept dstports=443 dsthost=registry.npmjs.org proto=tcp comment="npm i"
+    qvm-firewall $appvm add accept dstports=443 dsthost=deb.debian.org proto=tcp comment="apt-get"
+    qvm-firewall $appvm add accept specialtarget=dns
+    qvm-firewall $appvm add accept proto=icmp
+    qvm-firewall $appvm add drop comment="no connection to outsize"
+}
+
+
+# action: create, update, delete
+ACTION=''
+VM=''
+while getopts "cudv:" OPTION; do
+    case $OPTION in
+        c)
+            if [[ $ACTION == '' ]]; then
+                ACTION=CREATE
+            else
+                echo "error - only one action"
+                print_help
+                exit 1
+            fi
+            ;;
+        u)
+            if [[ $ACTION == '' ]]; then
+                ACTION=UPDATE
+            else
+                echo "error - only one action"
+                print_help
+                exit 1
+            fi
+            ;;
+        d)
+            if [[ $ACTION == '' ]]; then
+                ACTION=DELETE
+            else
+                echo "error - only one action"
+                print_help
+                exit 1
+            fi
+            ;;
+        v)
+            if [[ $VM == '' ]]; then
+                VM=$OPTARG
+            else
+                echo "error - only one vm"
+                print_help
+                exit 1
+            fi
+            ;;
+        *)
+            print_help
+            exit 1
+            ;;
+    esac
+done
+
+if [ "$ACTION" == "" ] || [ "$VM" == "" ]; then
+    echo "error - specify action and vm"
+    print_help
+    exit 1
+fi
+
+
+declare -A VM_SOFT
+declare -A VM_TEMPLATE_NAMES
+
+VM_TEMPLATE_NAMES=(
+    [l2-dev]=template-l2
+    )
+
+VM_SOFT=( 
+    [l2-dev]=$(tr -s [:space:] '&' <<EOF
+    	curl
+	neovim
+	meld
+        software-properties-common
+        apt-transport-https
+        curl
+        ca-certificates
+        redis
+        redis-server
+        redis-tools
+	openjdk-17-jdk
+	openjdk-17-source
+	openjdk-17-doc
+	maven
+	gradle
+	gradle-completion
+EOF
+    )
+)
+
+if [ $DEBUG ]; then echo "--VM:$VM, ACTION:$ACTION"; fi
+
+case $ACTION in
+    CREATE)
+        case $VM in
+            l2-dev)
+                if [ $DEBUG ]; then echo "--creating $VM"; fi
+                TEMPLATE=${VM_TEMPLATE_NAMES[$VM]}
+                SOFTWARE=${VM_SOFT[$VM]}
+
+                create_template $TEMPLATE $SOFTWARE
+                create_l2-dev_appvms $TEMPLATE $VM
+		config_l2-dev_firewall $VM
+
+		#appdir=".local/share/applications/org.qubes-os.vm._dev_dl2."
+		#appfirefox="firefox-esr.desktop"
+		#qvm-run -p l2-dev "mv ${appdir}${appfirefox} ${appdir}${appfirefox}.orig" 
+                ;;
+            *)
+                echo "ERROR: create: unknown vm: $VM"
+                exit 1
+                ;;
+        esac
+        ;;
+    UPDATE)
+        case $VM in
+            l2-dev)
+                if [ $DEBUG ]; then echo "--updating $VM"; fi
+                TEMPLATE=${VM_TEMPLATE_NAMES[$VM]}
+                SOFTWARE=${VM_SOFT[$VM]}
+
+                qvm-start $TEMPLATE
+                update_template $TEMPLATE
+                install_software $TEMPLATE $SOFTWARE
+                qvm-shutdown $TEMPLATE
+                ;;
+            *)
+                echo "ERROR: create: unknown vm: $VM"
+                exit 1
+                ;;
+        esac
+        ;;
+    DELETE)
+        case $VM in
+            l2-dev)
+                if [ $DEBUG ]; then echo "--deleting $VM"; fi
+
+                qvm-shutdown $VM
+                check_vm $VM
+                ;;
+            *)
+                echo "ERROR: delete: unknown vm: $VM"
+                exit 1
+                ;;
+	esac
+        ;;
+esac
+echo "...done"
+
