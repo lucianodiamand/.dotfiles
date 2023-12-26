@@ -1,0 +1,38 @@
+# Download jfortivpn
+git clone https://github.com/lucianodiamand/jfortivpn.git
+
+cd jfortivpn
+
+./gradlew fatJar
+
+cd
+
+# Install jfortivpn config file
+.jfortivpn << EOF
+profiles:
+  - name: production
+    vpn_config: <openfortivpn_config_file>
+    otp_prompt: "Two-factor authentication token:"
+    search_delay: 2s
+    search_sender: <sender>
+    search_mailbox: OTP
+    search_within: 60s
+    search_field: Subject
+    search_regex: 'Token code: (\d+)'
+    imap:
+      host: imap.gmail.com
+      port: 993
+      username: <email>
+      password: <password>
+EOF
+
+# Install openfortivpn config file
+${HOME}/.config/openfortivpn/config.cfg << EOF
+host=<host>
+port=443
+username=<user>
+password=<password>
+trusted-cert=ea17752b869e7fcc8a1c45b88798c64fc157661fe55f6e52730be0b19ffb8046
+EOF
+
+
