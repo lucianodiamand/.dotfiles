@@ -97,6 +97,9 @@ function install_software () {
 
     local command="qvm-run -p $template \"sudo ${APT_OPTIONS} apt-get -y install $softwarelist"\"
     eval $command
+    echo -e "\n  configuring $template: install services"
+    qvm-run $appvm "chmod +x ${VMS_CONFIG}/${template}/configure_client"
+    qvm-run $appvm "${VMS_CONFIG}/${template}/configure_client"
 }
 
 
@@ -119,22 +122,54 @@ function create_l2-dev_appvms() {
     local template=$1
     local appvm=$2
 
-    if [ "$DEBUG" ]; then echo "--create_l2-dev_appvms TEMPLATE:$template, APPVM:$appvm"; fi
+    if [ "$DEBUG" ]; then echo "--create_${appvm}_appvms TEMPLATE:$template, APPVM:$appvm"; fi
     check_vm $appvm
 
-    qvm-create --class AppVM --template $template --label yellow --prop=maxmem=8192 --prop=memory=1024 $appvm
+    qvm-create --class AppVM --template $template --label yellow --prop=maxmem=8192 --prop=memory=1024 $appvm --prop=netvm=sys-vpn
     qvm-volume extend $appvm:private 10240mb
 
     qvm-start $appvm
     config_user $appvm
 
-    if [ "$DEBUG" ]; then echo "--create_l2-dev_appvms configuring client"; fi
+    if [ "$DEBUG" ]; then echo "--create_${appvm}_appvms configuring client"; fi
 
     #qvm-copy-to-vm $appvm ${CONFIGDIR}/${appvm}/configure_client
     echo -e "\n  configuring $appvm: install nvm, node, angular/cli"
     qvm-run $appvm "chmod +x ${VMS_CONFIG}/${appvm}/configure_client"
     qvm-run $appvm "${VMS_CONFIG}/${appvm}/configure_client"
-    qvm-run $appvm "rm -rf $INCOMING"
+    #qvm-run $appvm "rm -rf $INCOMING"
+    qvm-shutdown $appvm 
+}
+
+
+function create_sys-vpn_appvms() {
+    local template=$1
+    local appvm=$2
+
+    if [ "$DEBUG" ]; then echo "--create_${appvm}_appvms TEMPLATE:$template, APPVM:$appvm"; fi
+    check_vm $appvm
+
+    qvm-create --class AppVM --template $template --label yellow --prop=maxmem=8192 --prop=memory=1024 --prop=provides_network=True $appvm
+    #qvm-volume extend $appvm:private 10240mb
+
+    qvm-start $appvm
+    config_user $appvm
+
+    if [ "$DEBUG" ]; then echo "--create_${appvm}_appvms configuring client"; fi
+
+    qvm-run $appvm "git clone https://github.com/lucianodiamand/jfortivpn.git"
+    #qvm-copy-to-vm $appvm ${CONFIGDIR}/${appvm}/configure_client
+    echo -e "\n  configuring $appvm: install jfortivpn"
+    read -p "  HOST: " HOST
+    read -p "  USER: " USER
+    read -p -s "  PASSWORD: " PASSWORD
+    read -p "  CONFIG_FILE: " OPENFORTIVPN_CONFIG_FILE
+    read -p "  SENDER: " SENDER
+    read -p "  EMAIL: " EMAIL
+    read -p -s "  PASSWORD EMAIL: " PASSWORD_EMAIL
+    qvm-run $appvm "chmod +x ${VMS_CONFIG}/${appvm}/configure_client"
+    qvm-run $appvm "HOST=${HOST} USER=${USER} PASSWORD=${PASSWORD} OPENFORTIVPN_CONFIG_FILE=${OPENFORTIVPN_CONFIG_FILE} SENDER=${SENDER} EMAIL=${EMAIL} PASSWORD_EMAIL=${PASSWORD_EMAIL} ${VMS_CONFIG}/${appvm}/configure_client"
+    #qvm-run $appvm "rm -rf $INCOMING"
     qvm-shutdown $appvm 
 }
 
@@ -142,9 +177,11 @@ function create_l2-dev_appvms() {
 function config_l2-dev_firewall() {
     local appvm=$1
 
-    if [ "$DEBUG" ]; then echo "--config_l2-dev_firewall APPVM:$appvm"; fi
+    if [ "$DEBUG" ]; then echo "--config_${appvm}_firewall APPVM:$appvm"; fi
 
     qvm-firewall $appvm del --rule-no 0
+    qvm-firewall $appvm add accept dstports=53 dsthost=10.139.1.1 proto=tcp comment="ns1"
+    qvm-firewall $appvm add accept dstports=53 dsthost=10.139.1.2 proto=tcp comment="ns2"
     qvm-firewall $appvm add accept dstports=443 dsthost=raw.githubusercontent.com proto=tcp comment="nvm"
     #qvm-firewall $appvm add accept dstports=80 dsthost=www.paginasblancas.com.ar proto=tcp comment="phone"
     #qvm-firewall $appvm add accept dstports=53 dsthost=myip.opendns.com proto=udp comment="myip"
@@ -218,10 +255,13 @@ declare -A VM_TEMPLATE_NAMES
 
 VM_TEMPLATE_NAMES=(
     [l2-dev]=template-l2
+    [sys-vpn]=template-vpn
     )
 
 VM_SOFT=( 
     [l2-dev]=$(tr -s [:space:] '&' <<EOF
+	exa
+    	rxvt-unicode
     	curl
 	neovim
 	meld
@@ -244,6 +284,14 @@ VM_SOFT=(
 	html2text
 EOF
     )
+    [sys-vpn]=$(tr -s [:space:] '&' <<EOF
+	exa
+    	rxvt-unicode
+	stow
+	openfortivpn
+	openjdk-17-jdk
+EOF
+    )
 )
 
 if [ $DEBUG ]; then echo "--VM:$VM, ACTION:$ACTION"; fi
@@ -252,6 +300,14 @@ case $ACTION in
     CREATE)
         case $VM in
             l2-dev)
+		vpnvm=sys-vpn
+                if [ $DEBUG ]; then echo "--creating $VM"; fi
+                TEMPLATE_VPN=${VM_TEMPLATE_NAMES[$vpnvm]}
+                SOFTWARE_VPN=${VM_SOFT[$vpnvm]}
+
+                create_template $TEMPLATE_VPN $SOFTWARE_VPN
+                create_sys-vpn_appvms $TEMPLATE_VPN $vpnvm
+
                 if [ $DEBUG ]; then echo "--creating $VM"; fi
                 TEMPLATE=${VM_TEMPLATE_NAMES[$VM]}
                 SOFTWARE=${VM_SOFT[$VM]}
