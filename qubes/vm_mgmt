@@ -14,7 +14,8 @@ MASTERTEMPLATE=${DISTRO_NAME}-${RELEASE_NUMBER} #-minimal
 CONFIGDIR=${HOME}/config
 DEBUG=1
 INCOMING=${HOME}/QubesIncoming
-DOTFILES=https://github.com/lucianodiamand/.dotfiles
+DOTFILES_URL=https://github.com/lucianodiamand/.dotfiles
+VMS_CONFIG=${HOME}/.dotfiles/qubes/vms
 APT_OPTIONS=DEBIAN_FRONTEND=noninteractive
 
 
@@ -70,7 +71,7 @@ function config_user () {
     if [ $DEBUG ]; then echo "--config_user APPVM:$appvm"; fi
     
     qvm-start $appvm
-    qvm-run -p $appvm "git clone ${DOTFILES}"
+    qvm-run -p $appvm "git clone ${DOTFILES_URL}"
     qvm-run -p $appvm "mkdir ${HOME}/bin"
     #qvm-copy-to-vm $appvm ${CONFIGDIR}/${appvm}/_vimrc
     qvm-run -p $appvm "rm -rf $INCOMING"
@@ -125,12 +126,14 @@ function create_l2-dev_appvms() {
     qvm-volume extend $appvm:private 10240mb
 
     qvm-start $appvm
+    config_user $appvm
+
     if [ "$DEBUG" ]; then echo "--create_l2-dev_appvms configuring client"; fi
 
-    qvm-copy-to-vm $appvm ${CONFIGDIR}/${appvm}/configure_client
+    #qvm-copy-to-vm $appvm ${CONFIGDIR}/${appvm}/configure_client
     echo -e "\n  configuring $appvm: install nvm, node, angular/cli"
-    qvm-run $appvm "chmod +x ${INCOMING}/dom0/configure_client"
-    qvm-run $appvm "${INCOMING}/dom0/configure_client"
+    qvm-run $appvm "chmod +x ${VMS_CONFIG}/${appvm}/configure_client"
+    qvm-run $appvm "${VMS_CONFIG}/${appvm}/configure_client"
     qvm-run $appvm "rm -rf $INCOMING"
     qvm-shutdown $appvm 
 }
@@ -143,6 +146,8 @@ function config_l2-dev_firewall() {
 
     qvm-firewall $appvm del --rule-no 0
     qvm-firewall $appvm add accept dstports=443 dsthost=raw.githubusercontent.com proto=tcp comment="nvm"
+    #qvm-firewall $appvm add accept dstports=80 dsthost=www.paginasblancas.com.ar proto=tcp comment="phone"
+    #qvm-firewall $appvm add accept dstports=53 dsthost=myip.opendns.com proto=udp comment="myip"
     qvm-firewall $appvm add accept dstports=443 dsthost=github.com proto=tcp comment="nvm"
     qvm-firewall $appvm add accept dstports=443 dsthost=nodejs.org proto=tcp comment="nvm install"
     qvm-firewall $appvm add accept dstports=443 dsthost=registry.npmjs.org proto=tcp comment="npm i"
@@ -233,6 +238,10 @@ VM_SOFT=(
 	maven
 	gradle
 	gradle-completion
+	stow
+	fish
+	dnsutils
+	html2text
 EOF
     )
 )
