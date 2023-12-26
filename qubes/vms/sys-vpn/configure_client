@@ -11,10 +11,10 @@ cd
 .jfortivpn << EOF
 profiles:
   - name: production
-    vpn_config: <openfortivpn_config_file>
+    vpn_config: ${OPENFORTIVPN_CONFIG_FILE}
     otp_prompt: "Two-factor authentication token:"
     search_delay: 2s
-    search_sender: <sender>
+    search_sender: ${SENDER}
     search_mailbox: OTP
     search_within: 60s
     search_field: Subject
@@ -22,16 +22,18 @@ profiles:
     imap:
       host: imap.gmail.com
       port: 993
-      username: <email>
-      password: <password>
+      username: ${EMAIL}
+      password: ${PASSWORD_EMAIL}
 EOF
 
 # Install openfortivpn config file
+mkdir -p ${HOME}/.config/openfortivpn
+
 ${HOME}/.config/openfortivpn/config.cfg << EOF
-host=<host>
+host=${HOST}
 port=443
-username=<user>
-password=<password>
+username=${USER}
+password=${PASSWORD}
 trusted-cert=ea17752b869e7fcc8a1c45b88798c64fc157661fe55f6e52730be0b19ffb8046
 EOF
 
