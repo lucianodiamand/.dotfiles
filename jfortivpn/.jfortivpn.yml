@@ -1,9 +1,9 @@
 profiles:
   - name: production
-    vpn_config: <openfortivpn_config_file>
+    vpn_config: ${OPENFORTIVPN_CONFIG_FILE}
     otp_prompt: "Two-factor authentication token:"
     search_delay: 2s
-    search_sender: <sender>
+    search_sender: ${SENDER}
     search_mailbox: OTP
     search_within: 60s
     search_field: Subject
@@ -11,5 +11,5 @@ profiles:
     imap:
       host: imap.gmail.com
       port: 993
-      username: <email>
-      password: <password>
+      username: ${EMAIL}
+      password: ${PASSWORD}
