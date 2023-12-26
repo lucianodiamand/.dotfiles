@@ -1,0 +1,19 @@
+# Install node
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
+export NVM_DIR=${HOME}/.nvm
+[ -s ${NVM_DIR}/nvm.sh ] && . ${NVM_DIR}/nvm.sh
+[ -s ${NVM_DIR}/bash_completion ] && . ${NVM_DIR}/bash_completion
+nvm install --lts
+
+# Install Angular
+npm i -g @angular/cli
+#echo -e "\n" >> ${HOME}/.bashrc
+ng completion script >> ${HOME}/.bashrc
+
+# Config git user and email
+git config --global user.name "Luciano Daniel Diamand"
+git config --global user.email "lucianodiamand@gmail.com"
+
+# Create bin directory
+mkdir ${HOME}/bin
+
