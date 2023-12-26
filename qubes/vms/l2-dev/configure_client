@@ -10,7 +10,7 @@ nvm install --lts
 
 # Install Angular
 npm i -g @angular/cli
-#echo -e "\n" >> ${HOME}/.bashrc
+echo -e "\n" >> ${HOME}/.bashrc
 ng completion script >> ${HOME}/.bashrc
 
 # Config git user and email
