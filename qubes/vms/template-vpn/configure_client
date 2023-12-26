@@ -1,0 +1,23 @@
+# Install jfortivpn service
+cat << EOF > /lib/systemd/system/jfortivpn.service
+[Unit]
+Description=jfortivpn
+After=network.target
+
+[Service]
+Restart=always
+User=root
+Group=root
+WorkingDirectory=/tmp
+ExecStart=/usr/bin/java -jar /home/user/jfortivpn/jfortivpn/build/libs/jfortivpn-project.jar
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+ln -s /lib/systemd/system/jfortivpn.service /etc/systemd/system/jfortivpn.service
+
+systemctl unmask jfortivpn.service
+systemctl enable jfrotivpn.service
+#systemctl start jfortivpn.service
+

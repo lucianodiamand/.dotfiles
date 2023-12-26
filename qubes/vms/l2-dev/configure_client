@@ -1,5 +1,5 @@
 # Stow config
-stow -d .dotfiles fish bin
+stow -d .dotfiles fish bin rxvt
 
 # Install node
 curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
@@ -16,4 +16,11 @@ ng completion script >> ${HOME}/.bashrc
 # Config git user and email
 git config --global user.name "Luciano Daniel Diamand"
 git config --global user.email "lucianodiamand@gmail.com"
+
+# Config Nerd fonts
+curl -L -o /tmp/Hack.zip https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/Hack.zip
+mkdir -p ${HOME}/.local/share/fonts
+unzip /tmp/Hack.zip -d ${HOME}/.local/share/fonts
+fc-cache -fv
+
 
