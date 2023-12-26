@@ -8,7 +8,7 @@ cd jfortivpn
 cd
 
 # Install jfortivpn config file
-.jfortivpn << EOF
+cat << EOF > ${HOME}/.jfortivpn
 profiles:
   - name: production
     vpn_config: ${OPENFORTIVPN_CONFIG_FILE}
@@ -29,7 +29,7 @@ EOF
 # Install openfortivpn config file
 mkdir -p ${HOME}/.config/openfortivpn
 
-${HOME}/.config/openfortivpn/config.cfg << EOF
+cat << EOF > ${HOME}/.config/openfortivpn/config.cfg
 host=${HOST}
 port=443
 username=${USER}
