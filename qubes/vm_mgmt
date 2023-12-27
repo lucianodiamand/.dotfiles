@@ -4,9 +4,23 @@
 #
 # Bash script to create and update templates and their concomitant appVMs.
 #
-# Usage: run in dom0
+# Author: Luciano Daniel Diamand
+# Date: 2023 December 20
+#
+# Usage: copy to dom0 and run with the following from dom0:
+#
+#	qvm-run -p <name_of_qube> 'cat vm_mgmt' > vm_mgmt
+#	chmod +x vm_mgmt
+#	./vm_mgmt
 #
 # TODO: fix qvm-clone: error: Logical Volumne "..." already exists in volume group "..."
+
+###############################################################################
+# Global variables
+#
+# DISTRO_NAME the name of the template to clone from
+# RELEASE_NUMBER the release number of the template to clone from
+# MASTERTEMPLATE the name and release number concatenated
 
 DISTRO_NAME=debian
 RELEASE_NUMBER=12
@@ -18,13 +32,217 @@ DOTFILES_URL=https://github.com/lucianodiamand/.dotfiles
 VMS_CONFIG=${HOME}/.dotfiles/qubes/vms
 APT_OPTIONS=DEBIAN_FRONTEND=noninteractive
 
+# Debian base software package list
+_DEBIAN_BASE_SOFT=$(tr -s [:space:] '&' <<EOF
+    rxvt-unicode
+    curl
+    stow
+    fish
+    exa
+EOF
+)
+
+RED='\033[0;31m'
+BLUE='\033[0;34m'
+GREEN='\033[0;32m'
+NC='\033[0m'
+
+declare -A VM_SOFT
+declare -A VM_TEMPLATE_NAMES
+declare -A VM_SERVICES
+declare -A SERVICES_LINES
+declare -A SERVICES_COMMANDS
+
+###############################################################################
+# VM -> Template
+
+VM_TEMPLATE_NAMES=(
+    [l2-dev]=template-dev
+    [sys-vpn]=template-vpn
+)
+
+###############################################################################
+# Services
+
+VM_SERVICES=( 
+    [template-vpn]=$(tr -s [:space:] '&' <<EOF
+        jfortivpn
+EOF
+    )
+)
+
+###############################################################################
+# Packages
+
+VM_SOFT=( 
+    [l2-dev]=$(tr -s [:space:] '&' <<EOF
+	neovim
+	meld
+        software-properties-common
+        apt-transport-https
+        ca-certificates
+        redis
+        redis-server
+        redis-tools
+	openjdk-17-jdk
+	openjdk-17-source
+	openjdk-17-doc
+	maven
+	gradle
+	gradle-completion
+	dnsutils
+	html2text
+EOF
+    )
+    [sys-vpn]=$(tr -s [:space:] '&' <<EOF
+	openfortivpn
+	openjdk-17-jdk
+EOF
+    )
+)
+
+###############################################################################
+# VM variables
+#
+
+JFORTIVPN_LINES=$(cat <<EOF
+# This is a "service unit" file for the systemd init system to launch
+# 'jfortivpn'. Drop it in /etc/systemd/system or similar to have
+# 'jfortivpn' automatically started.
+
+[Unit]
+Description=jfortivpn service
+After=network.target
+
+[Service]
+User=root
+Group=root
+WorkingDirectory=/tmp
+ExecStart=/usr/bin/java -jar /usr/share/java/jfortivpn/jfortivpn.jar
+Environment=LC_ALL=C.UTF-8
+
+# Work arround a nasty systemd 'feature' that kills the entire process tree
+# (including the daemon!) if any child, such as cc1plus, runs out of memory.
+OOMPolicy=continue
+
+# Despite the name, this is rate-limited: a broken daemon will eventually fail.
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
+EOF
+)
+
+SERVICES_LINES=(
+    [jfortivpn]=${JFORTIVPN_LINES}
+)
+
+JFORTIVPN_COMMANDS=$(cat <<EOF
+    http_proxy="http://127.0.0.1:8082" https_proxy="http://127.0.0.1:8082" git clone https://github.com/lucianodiamand/jfortivpn.git /tmp/jfortivpn
+    cd /tmp/jfortivpn; ./gradlew -Dhttp.proxyHost=127.0.0.1 -Dhttp.proxyPort=8082 -Dhttps.proxyHost=127.0.0.1 -Dhttps.proxyPort=8082 fatJar
+    mkdir -p /usr/share/java/jfortivpn
+    cp /tmp/jfortivpn/jfortivpn/build/libs/jfortivpn-project.jar /usr/share/java/jfortivpn/jfortivpn.jar
+EOF
+)
+
+SERVICES_COMMANDS=(
+    [jfortivpn]=${JFORTIVPN_COMMANDS}
+)
+
+function print_error() {
+    local message=$1
+    echo -e "${RED}[!]${NC} ${message}" >&2
+}
+
+function print_info() {
+    local message=$1
+    echo -e "${BLUE}[-]${NC} ${message}" >&2
+}
+
+function print_ok() {
+    local message=$1
+    echo -e "${GREEN}[*]${NC} ${message}" >&2
+}
+
+error() {
+    exit_code="$?"
+    print_error "An unexpected error has occurred! Exiting..."
+    exit "$exit_code"
+}
+
+###############################################################################
+# Helper functions
+#
 
 function print_help() {
-    echo "Usage: vm_mgmt (-c | -u | -d) -v VMNAME"
-    echo "  where VNAME is l2-dev"
+    echo "Usage: ${0} (-c | -u | -d) -v VMNAME"
+    echo "  where VMNAME in sys-vpn,l2-dev"
     exit 1
 }
 
+__qvm_run_options="-p --color-stderr=37"
+
+function notify () {
+    # centralized function to notify/echo messages currently sent for STDERR on 2
+    # _level is arbitrary - but generally:
+    #     0 - run error, program will exit
+    #     1 - general info
+    #     2 - more detail, debugging info
+    declare _level=$1
+    declare _msg=${@:2}
+
+    if [[ "$__notifylevel" -ge "$_level" ]]; then
+	cat <<< "$_msg" 1>&2
+    fi
+}
+
+function qube_write_file () {
+    declare _vm=$1
+    declare _user=$2
+    declare _file=$3
+    declare _lines="${@:4}"
+    notify 2 "qube_write_file: VM:$_vm user:$_user file:$_file"
+
+    qvm-run $__qvm_run_options -u "$_user" "$_vm" "echo > $_file"
+    qube_append_file $_vm $_user $_file "$_lines"
+}
+
+function qube_append_file () {
+    declare _vm=$1
+    declare _user=$2
+    declare _file=$3
+    declare _lines="${@:4}"
+    declare _line
+    notify 2 "qube_append_file: VM:$_vm user:$_user file:$_file"
+
+    while read -r _line <&3; do
+	notify 2 "qube_append_file: --$_line--"
+	qvm-run $__qvm_run_options -u "$_user" "$_vm" \
+	    "echo \"$_line\" >> $_file"
+    done 3<<< "$_lines"
+}
+
+function qube_run_commands () {
+    # because of tripple quoting of variables
+    #   escape each backslash twice
+    #   eg: \n --> \\\n
+
+    declare _vm=$1
+    declare _user=$2
+    declare _commands="${@:3}"
+    declare _cmd
+    if [[ -z "$_user" ]]; then _user="user"; fi
+    notify 2 "qube_run_commands: VM:$_vm user:$_user"
+
+    while read -r _cmd <&3; do
+	notify 2 "qube_run_commands: --$_cmd--"
+	qvm-run \
+	    $__qvm_run_options \
+	    -u "$_user" \
+	    "$_vm" \
+	    "$_cmd"
+    done 3<<< "$_commands"
+}
 
 function check_master_template () {
     # check if master template exists
@@ -32,20 +250,18 @@ function check_master_template () {
 
     qvm-check --template $MASTERTEMPLATE
     if [ "$?" -ne 0 ]; then
-	echo "Downloading master template $MASTERTEMPLATE"
+	print_info "Downloading master template $MASTERTEMPLATE"
 	sudo qubes-dom0-update qubes-template-$MASTERTEMPLATE
     else
-	echo "Master template present..."
+	print_ok "Master template present"
     fi
 }
-
 
 function delete_vm () {
     local vmname=$1
     qvm-remove $vmname
     if [ "$?" -ne 0 ]; then exit 1; fi
 }
-
 
 function check_vm () {
     # check if vm exists - delete or exit
@@ -65,7 +281,6 @@ function check_vm () {
     fi
 }
 
-
 function config_user () {
     local appvm=$1
     if [ $DEBUG ]; then echo "--config_user APPVM:$appvm"; fi
@@ -77,7 +292,6 @@ function config_user () {
     qvm-run -p $appvm "rm -rf $INCOMING"
 }
 
-
 function update_template () {
     local template=$1
     if [ $DEBUG ]; then echo "--update_template: template:$template"; fi
@@ -86,7 +300,6 @@ function update_template () {
     qvm-run -p $template "sudo ${APT_OPTIONS} apt-get -y dist-upgrade"
     qvm-run -p $template "sudo ${APT_OPTIONS} apt-get -y autoremove"
 }
-
 
 function install_software () {
     local template=$1
@@ -97,26 +310,52 @@ function install_software () {
 
     local command="qvm-run -p $template \"sudo ${APT_OPTIONS} apt-get -y install $softwarelist"\"
     eval $command
-    echo -e "\n  configuring $template: install services"
-    qvm-run $appvm "chmod +x ${VMS_CONFIG}/${template}/configure_client"
-    qvm-run $appvm "${VMS_CONFIG}/${template}/configure_client"
 }
 
+function install_service () {
+    local service_name=$1
+    local service_unit_lines=${SERVICES_LINES[$service_name]}
+    local service_commands=${SERVICES_COMMANDS[$service_name]}
+    echo "1: $service_commands"
+
+    if [ $DEBUG ]; then echo "--install_service: template:$template, service:$service_name"; fi
+
+    qube_write_file $template "user" \
+        "/tmp/${service_name}.service" \
+        "$service_unit_lines"
+
+    qvm-run -p $template "sudo mv /tmp/${service_name}.service /lib/systemd/system/${service_name}.service"
+    #qvm-run -p $template "sudo ln -s /lib/systemd/system/${service_name}.service /etc/systemd/system/${service_name}.service"
+
+    qube_run_commands $template "root" "$service_commands"
+
+    qvm-run -p $template "sudo systemctl unmask ${service_name}.service"
+    qvm-run -p $template "sudo systemctl enable ${service_name}.service"
+    qvm-run -p $template "sudo systemctl start ${service_name}.service"
+
+    #local command="qvm-run -p $template \"sudo ${APT_OPTIONS} apt-get -y install $softwarelist"\"
+    #eval $command
+}
 
 function create_template () {
     local template=$1
     local software=$2
+    local services=$3
+
     if [ $DEBUG ]; then echo "--create_template : TEMPLATE:$template, SOFTWARE:$software"; fi
 
     check_master_template
     qvm-clone $MASTERTEMPLATE $template
     qvm-start $template
     update_template $template
+    install_software $template $_DEBIAN_BASE_SOFT
     install_software $template $software
+
+    serviceslist=$(echo $services | tr '&' ' ')
+    install_service $serviceslist
     qvm-sync-appmenus $template
     qvm-shutdown $template
 }
-
 
 function create_l2-dev_appvms() {
     local template=$1
@@ -125,7 +364,13 @@ function create_l2-dev_appvms() {
     if [ "$DEBUG" ]; then echo "--create_${appvm}_appvms TEMPLATE:$template, APPVM:$appvm"; fi
     check_vm $appvm
 
-    qvm-create --class AppVM --template $template --label yellow --prop=maxmem=8192 --prop=memory=1024 $appvm --prop=netvm=sys-vpn
+    qvm-create --class AppVM \
+	--template $template \
+	--label yellow \
+	--prop=maxmem=8192 \
+	--prop=memory=1024 \
+	--prop=netvm=sys-vpn \
+	$appvm
     qvm-volume extend $appvm:private 10240mb
 
     qvm-start $appvm
@@ -141,7 +386,6 @@ function create_l2-dev_appvms() {
     qvm-shutdown $appvm 
 }
 
-
 function create_sys-vpn_appvms() {
     local template=$1
     local appvm=$2
@@ -149,7 +393,13 @@ function create_sys-vpn_appvms() {
     if [ "$DEBUG" ]; then echo "--create_${appvm}_appvms TEMPLATE:$template, APPVM:$appvm"; fi
     check_vm $appvm
 
-    qvm-create --class AppVM --template $template --label yellow --prop=maxmem=8192 --prop=memory=1024 --prop=provides_network=True $appvm
+    qvm-create --class AppVM \
+	--template $template \
+	--label yellow \
+	--prop=maxmem=8192 \
+	--prop=memory=1024 \
+	--prop=provides_network=True \
+	$appvm
     #qvm-volume extend $appvm:private 10240mb
 
     qvm-start $appvm
@@ -162,17 +412,16 @@ function create_sys-vpn_appvms() {
     echo -e "\n  configuring $appvm: install jfortivpn"
     read -p "  HOST: " HOST
     read -p "  USER: " USER
-    read -p -s "  PASSWORD: " PASSWORD
+    read -p "  PASSWORD: " PASSWORD
     read -p "  CONFIG_FILE: " OPENFORTIVPN_CONFIG_FILE
     read -p "  SENDER: " SENDER
     read -p "  EMAIL: " EMAIL
-    read -p -s "  PASSWORD EMAIL: " PASSWORD_EMAIL
+    read -p "  PASSWORD EMAIL: " PASSWORD_EMAIL
     qvm-run $appvm "chmod +x ${VMS_CONFIG}/${appvm}/configure_client"
     qvm-run $appvm "HOST=${HOST} USER=${USER} PASSWORD=${PASSWORD} OPENFORTIVPN_CONFIG_FILE=${OPENFORTIVPN_CONFIG_FILE} SENDER=${SENDER} EMAIL=${EMAIL} PASSWORD_EMAIL=${PASSWORD_EMAIL} ${VMS_CONFIG}/${appvm}/configure_client"
     #qvm-run $appvm "rm -rf $INCOMING"
     qvm-shutdown $appvm 
 }
-
 
 function config_l2-dev_firewall() {
     local appvm=$1
@@ -194,7 +443,6 @@ function config_l2-dev_firewall() {
     qvm-firewall $appvm add drop comment="no connection to outsize"
 }
 
-
 # action: create, update, delete
 ACTION=''
 VM=''
@@ -204,7 +452,7 @@ while getopts "cudv:" OPTION; do
             if [[ $ACTION == '' ]]; then
                 ACTION=CREATE
             else
-                echo "error - only one action"
+                print_error "Only one action"
                 print_help
                 exit 1
             fi
@@ -213,7 +461,7 @@ while getopts "cudv:" OPTION; do
             if [[ $ACTION == '' ]]; then
                 ACTION=UPDATE
             else
-                echo "error - only one action"
+                print_error "Only one action"
                 print_help
                 exit 1
             fi
@@ -222,7 +470,7 @@ while getopts "cudv:" OPTION; do
             if [[ $ACTION == '' ]]; then
                 ACTION=DELETE
             else
-                echo "error - only one action"
+                print_error "Only one action"
                 print_help
                 exit 1
             fi
@@ -231,7 +479,7 @@ while getopts "cudv:" OPTION; do
             if [[ $VM == '' ]]; then
                 VM=$OPTARG
             else
-                echo "error - only one vm"
+                print_error "Only one vm"
                 print_help
                 exit 1
             fi
@@ -244,70 +492,33 @@ while getopts "cudv:" OPTION; do
 done
 
 if [ "$ACTION" == "" ] || [ "$VM" == "" ]; then
-    echo "error - specify action and vm"
+    print_error "Specify action and vm"
     print_help
     exit 1
 fi
 
+# Validate this is Dom0
+if [ $(hostname) != "dom0" ]; then
+    print_error "This script must be run in Dom0"
+    exit 1
+fi
 
-declare -A VM_SOFT
-declare -A VM_TEMPLATE_NAMES
-
-VM_TEMPLATE_NAMES=(
-    [l2-dev]=template-l2
-    [sys-vpn]=template-vpn
-    )
-
-VM_SOFT=( 
-    [l2-dev]=$(tr -s [:space:] '&' <<EOF
-	exa
-    	rxvt-unicode
-    	curl
-	neovim
-	meld
-        software-properties-common
-        apt-transport-https
-        curl
-        ca-certificates
-        redis
-        redis-server
-        redis-tools
-	openjdk-17-jdk
-	openjdk-17-source
-	openjdk-17-doc
-	maven
-	gradle
-	gradle-completion
-	stow
-	fish
-	dnsutils
-	html2text
-EOF
-    )
-    [sys-vpn]=$(tr -s [:space:] '&' <<EOF
-	exa
-    	rxvt-unicode
-	stow
-	openfortivpn
-	openjdk-17-jdk
-EOF
-    )
-)
 
 if [ $DEBUG ]; then echo "--VM:$VM, ACTION:$ACTION"; fi
 
 case $ACTION in
     CREATE)
         case $VM in
-            l2-dev)
-		vpnvm=sys-vpn
+            sys-vpn)
                 if [ $DEBUG ]; then echo "--creating $VM"; fi
-                TEMPLATE_VPN=${VM_TEMPLATE_NAMES[$vpnvm]}
-                SOFTWARE_VPN=${VM_SOFT[$vpnvm]}
+                TEMPLATE=${VM_TEMPLATE_NAMES[$VM]}
+                SOFTWARE=${VM_SOFT[$VM]}
+		SERVICES=${VM_SERVICES[$TEMPLATE]}
 
-                create_template $TEMPLATE_VPN $SOFTWARE_VPN
-                create_sys-vpn_appvms $TEMPLATE_VPN $vpnvm
-
+                create_template $TEMPLATE $SOFTWARE $SERVICES
+                create_sys-vpn_appvms $TEMPLATE $VM
+                ;;
+            l2-dev)
                 if [ $DEBUG ]; then echo "--creating $VM"; fi
                 TEMPLATE=${VM_TEMPLATE_NAMES[$VM]}
                 SOFTWARE=${VM_SOFT[$VM]}
