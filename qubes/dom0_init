@@ -1,0 +1,237 @@
+#!/bin/bash
+
+# dom0_init
+#
+# Bash script to create and update templates and their concomitant appVMs.
+#
+# Author: Luciano Daniel Diamand
+# Date: 2023 December 28
+#
+# Usage: copy to dom0 and run with the following from dom0:
+#
+#	qvm-run -p <name_of_qube> 'cat dom0_init' > dom0_init
+#	chmod +x dom0_init
+#	./dom0_init
+#
+
+###############################################################################
+# Global variables
+#
+# DISTRO_NAME the name of the template to clone from
+# RELEASE_NUMBER the release number of the template to clone from
+# MASTERTEMPLATE the name and release number concatenated
+
+DISTRO_NAME=debian
+RELEASE_NUMBER=12
+MASTERTEMPLATE=${DISTRO_NAME}-${RELEASE_NUMBER} #-minimal
+CONFIGDIR=${HOME}/config
+DEBUG=1
+INCOMING=${HOME}/QubesIncoming
+DOTFILES_URL=https://github.com/lucianodiamand/.dotfiles
+VMS_CONFIG=${HOME}/.dotfiles/qubes/vms
+APT_OPTIONS=DEBIAN_FRONTEND=noninteractive
+PROXY_HOST=127.0.0.1
+PROXY_URL=http://${PROXY_HOST}
+PROXY_PORT=8082
+PROXY=${PROXY_URL}:${PROXY_PORT}
+
+RED='\033[0;31m'
+BLUE='\033[0;34m'
+GREEN='\033[0;32m'
+NC='\033[0m'
+
+function print_error() {
+    local message=$1
+    echo -e "${RED}[!]${NC} ${message}" >&2
+}
+
+function print_info() {
+    local message=$1
+    echo -e "${BLUE}[-]${NC} ${message}" >&2
+}
+
+function print_ok() {
+    local message=$1
+    echo -e "${GREEN}[*]${NC} ${message}" >&2
+}
+
+error() {
+    exit_code="$?"
+    print_error "An unexpected error has occurred! Exiting..."
+    exit "$exit_code"
+}
+
+###############################################################################
+# Helper functions
+#
+
+function print_help() {
+    echo "Usage: ${0}"
+    exit 1
+}
+
+__qvm_run_options="-p --color-stderr=37"
+
+function notify () {
+    # centralized function to notify/echo messages currently sent for STDERR on 2
+    # _level is arbitrary - but generally:
+    #     0 - run error, program will exit
+    #     1 - general info
+    #     2 - more detail, debugging info
+    declare _level=$1
+    declare _msg=${@:2}
+
+    if [[ "$__notifylevel" -ge "$_level" ]]; then
+	cat <<< "$_msg" 1>&2
+    fi
+}
+
+function qube_write_file () {
+    declare _vm=$1
+    declare _user=$2
+    declare _file=$3
+    declare _lines="${@:4}"
+    notify 2 "qube_write_file: VM:$_vm user:$_user file:$_file"
+
+    qvm-run $__qvm_run_options -u "$_user" "$_vm" "echo > $_file"
+    qube_append_file $_vm $_user $_file "$_lines"
+}
+
+function qube_append_file () {
+    declare _vm=$1
+    declare _user=$2
+    declare _file=$3
+    declare _lines="${@:4}"
+    declare _line
+    notify 2 "qube_append_file: VM:$_vm user:$_user file:$_file"
+
+    while read -r _line <&3; do
+	notify 2 "qube_append_file: --$_line--"
+	qvm-run $__qvm_run_options -u "$_user" "$_vm" \
+	    "echo \"$_line\" >> $_file"
+    done 3<<< "$_lines"
+}
+
+function qube_run_commands () {
+    # because of tripple quoting of variables
+    #   escape each backslash twice
+    #   eg: \n --> \\\n
+
+    declare _vm=$1
+    declare _user=$2
+    declare _commands="${@:3}"
+    declare _cmd
+    if [[ -z "$_user" ]]; then _user="user"; fi
+    notify 2 "qube_run_commands: VM:$_vm user:$_user"
+
+    while read -r _cmd <&3; do
+	notify 2 "qube_run_commands: --$_cmd--"
+	qvm-run \
+	    $__qvm_run_options \
+	    -u "$_user" \
+	    "$_vm" \
+	    "$_cmd"
+    done 3<<< "$_commands"
+}
+
+function check_master_template () {
+    # check if master template exists
+    if [ $DEBUG ]; then echo "--check_master_template: templatename:$MASTERTEMPLATE"; fi
+
+    qvm-check --template $MASTERTEMPLATE
+    if [ "$?" -ne 0 ]; then
+	print_info "Downloading master template $MASTERTEMPLATE"
+	sudo qubes-dom0-update qubes-template-$MASTERTEMPLATE
+    else
+	print_ok "Master template present"
+    fi
+}
+
+function delete_vm () {
+    local vmname=$1
+    qvm-remove $vmname
+    if [ "$?" -ne 0 ]; then exit 1; fi
+}
+
+function check_vm () {
+    # check if vm exists - delete or exit
+    local vmname=$1
+    if [ $DEBUG ]; then echo "--check_vm: vmname:$vmname"; fi
+    
+    #qvm-ls -O NAME | grep $vmname
+    qvm-check $vmname
+    if [ "$?" -eq 0 ]; then
+        read -p "  delete (n/Y)?" R
+        if [ "$R" == "Y" ]; then 
+	    delete_vm $vmname
+        else
+            echo "Exiting..."
+            exit 1
+        fi
+    fi
+}
+
+# Validate this is Dom0
+if [ $(hostname) != "dom0" ]; then
+    print_error "This script must be run in Dom0"
+    exit 1
+fi
+
+if [ $DEBUG ]; then echo "--init: dom0"; fi
+
+export DISTRO_NAME=debian
+export RELEASE_NUMBER=12
+export QUBES_NAME=${DISTRO_NAME}-${DISTRO_NUMBER}
+export QUBES_TEMPLATE=qubes-template-${QUBES_NAME}
+export TMP_VM=untrusted
+
+echo "Downloading templates (normal and minimal)"
+sudo qubes-dom0-update ${QUBES_TEMPLATE}
+sudo qubes-dom0-update ${QUBES_TEMPLATE}-minimal
+
+# Install needed packages in minimal template
+qvm-run -u root ${QUBES_NAME}-minimal "apt install qubes-core-agent-passwordless-root"
+
+# TODO review if needed
+# zenity
+# qubes-core-agent-dom0-updates
+
+echo "Change mac configuration for wifi card to (random)"
+qvm-run -p sys-net "nmcli connection modify 'sc-ec37' 802-11-wireless.cloned-mac-address random"
+
+echo "Creating bin directory"
+mkdir ${HOME}/bin
+
+echo -e "export PATH=${PATH}:${HOME}/bin" >> ${HOME}/.bashrc
+
+echo "Installing i3wm"
+sudo qubes-dom0-update i3 i3-settings-qubes
+
+echo "Configuring i3wm"
+qvm-run -p $TMP_VM "curl -o /tmp/config https://raw.githubusercontent.com/lucianodiamand/.dotfiles/main/i3/.config/i3/config"
+
+[[ -d ${HOME}/.config/i3 ]] || mkdir ${HOME}/.config/i3
+
+if [ -f ${HOME}/.config/i3/config ]; then
+  mv ${HOME}/.config/i3/config ${HOME}/.config/i3/config.orig
+fi
+ 
+qvm-run --pass-io $TMP_VM 'cat /tmp/config' > ${HOME}/.config/i3/config
+
+echo "Configuring rvxt"
+qvm-run -p $TMP_VM "curl -o /tmp/.Xresources https://raw.githubusercontent.com/lucianodiamand/.dotfiles/main/rvxt/.Xresources"
+
+if [ -f ${HOME}/.Xresources ]; then
+  mv ${HOME}/.Xresources ${HOME}/.Xresources.orig
+fi
+
+qvm-run --pass-io $TMP_VM 'cat /tmp/.Xresources' > ${HOME}/.Xresources
+
+echo "Donwloading vm_mgnt to manage VMs"
+qvm-run -p $TMP_VM "curl -o /tmp/vm_mgmt https://raw.githubusercontent.com/lucianodiamand/.dotfiles/main/qubes/vm_mgmt"
+
+qvm-run --pass-io $TMP_VM 'cat /tmp/vm_mgmt' > ${HOME}/bin/vm_mgmt
+chmod +x ${HOME}/bin/vm_mgmt
+
+echo "...done"
+
