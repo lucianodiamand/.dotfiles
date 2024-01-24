@@ -204,6 +204,12 @@ mkdir ${HOME}/bin
 
 echo -e "export PATH=${PATH}:${HOME}/bin" >> ${HOME}/.bashrc
 
+echo "Installing Nerd fonts"
+qvm-run -p $TMP_VM "curl -L -o /tmp/Hack.zip https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/Hack.zip"
+mkdir -p ${HOME}/.local/share/fonts
+unzip /tmp/Hack.zip -d ${HOME}/.local/share/fonts
+fc-cache -fv
+
 echo "Installing i3wm"
 sudo qubes-dom0-update i3 i3-settings-qubes
 
