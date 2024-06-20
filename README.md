@@ -30,5 +30,5 @@ To install packer:
 # Install the dotfiles
 
 To install run:
-```stow i3 nvim alacrity fish bin```
+```stow i3 nvim alacrity fish bin emacs```
 
