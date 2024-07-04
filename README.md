@@ -6,7 +6,7 @@ My personal dot files
 ## Nerd fonts
 
 Download the fonts.
-```wget -c https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/Hack.zip```
+```wget -c https://github.com/ryanoasis/nerd-fonts/releases/download/v3.2.1/Hack.zip -P /tmp```
 
 Uncompress in directory ```./local/share/fonts```
 
