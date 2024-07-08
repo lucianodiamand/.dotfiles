@@ -16,3 +16,5 @@
 ;; Set up the visible bell
 (setq visible-bell t)
 
+;; Remove windows frame
+(add-to-list 'default-frame-alist '(undecorated . t))
