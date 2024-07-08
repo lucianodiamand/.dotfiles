@@ -2,8 +2,25 @@ window:
   decorations: None
 
 font:
+  normal:
+    family: Hack Nerd Font Mono
+    style: Regular
+
+  bold:
+    family: Hack Nerd Font Mono
+    style: Bold
+
+  italic:
+    family: Hack Nerd Font Mono
+    style: Italic
+
+  bold_italic:
+    family: Hack Nerd Font Mono
+    style: Bold Italic
+
   size: 9.0
 
+# Soliarized-dark
 colors:
   primary:
     background: '#002b36'
@@ -30,3 +47,4 @@ colors:
     magenta: '#6c71c4'
     cyan:    '#93a1a1'
     white:   '#fdf6e3'
+
