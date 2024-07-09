@@ -15,8 +15,7 @@ vim.opt.fileencoding = 'utf-8'
 
 -- Print the line number in front of each line
 vim.wo.number = true
--- Show the line number relative to the line with the cursor in front of each
--- line
+-- Show the line number relative to the line with the cursor
 vim.opt.relativenumber = true
 -- Show line at column 80
 vim.opt.colorcolumn = '80'
@@ -90,4 +89,10 @@ vim.opt.formatoptions:append { 'r' }
 vim.opt.backup = false
 -- Skip backups when file is located under '/tmp'
 vim.opt.backupskip = '/tmp/*'
+
+-- Make sure to setup `mapleader` and `maplocalleader` before
+-- loading lazy.nvim so that mappings are correct.
+-- This is also a good place to setup other settings (vim.opt)
+vim.g.mapleader = " "
+vim.g.maplocalleader = "\\"
 

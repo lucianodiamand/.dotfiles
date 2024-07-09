@@ -1,5 +1,2 @@
-require('base')
-require('highlights')
-require('remaps')
-require('plugins')
-require('linux')
+require("user")
+
