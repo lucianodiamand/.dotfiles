@@ -33,8 +33,8 @@ return {
             modified_text,
             separator = { right = "" },
             padding = {
-              left = 3,
-              right = 3,
+              left = 2,
+              right = 2,
             },
             color = function()
               if vim.bo.modified then
