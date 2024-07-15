@@ -1,1 +1,9 @@
 emacs/.emacs.d/auto-save-list
+
+vimb/.config/vimb/closed
+vimb/.config/vimb/command
+vimb/.config/vimb/cookies.db
+vimb/.config/vimb/history
+
+nvim/.config/nvim/lazy-lock.json
+

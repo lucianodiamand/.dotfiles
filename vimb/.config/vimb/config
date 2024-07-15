@@ -1,0 +1,61 @@
+
+# Home page
+set home-page=https://duckduckgo.com
+
+# Downloads
+set download-path=~/Downloads/
+
+# UI
+set stylesheet=off
+set smooth-scrolling=on
+set dark-mode=on
+set tabs-to-links=on
+
+# If enabled the inputbox will be hidden whenever it contains no text.
+set input-autohide=true
+
+# While typing a search command, show where the pattern typed so far matches.
+set incsearch=true
+
+# Map page zoom in normal mode to keys commonly used across applications
+# + (zoom in), - (zoom out), = (zoom reset)
+nmap + zI
+nmap - zO
+nmap = zz
+
+# The default font size used to display text.
+#set font-size=24
+
+# Default font size for the monospace font.
+#set monospace-font-size=15
+
+# Webkit
+set default=charset=utf-8
+set accelerated-2d-canvas=on
+set html5-database=on
+set html5-local-storage=on
+set images=on
+set webgl=on
+set webaudio=on
+
+# Media
+set media-stream=on
+set mediasource=on
+
+# Editing
+set editor-command=gvim -f %s
+
+# Cookie Policy
+set cookie-accept=origin
+
+# SSL
+set strict-ssl=false
+
+# JS
+set scripts=on
+set javascript-can-access-clipboard=on
+set javascript-can-open-windows-automatically=off
+
+# Try to speed things up
+set hardware-acceleration-policy=ondemand
+
