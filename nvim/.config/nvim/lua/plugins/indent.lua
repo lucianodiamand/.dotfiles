@@ -7,6 +7,5 @@ return {
       scope = { enabled = false },
       indent = { char = "|" },
     })
-  end
+  end,
 }
-
