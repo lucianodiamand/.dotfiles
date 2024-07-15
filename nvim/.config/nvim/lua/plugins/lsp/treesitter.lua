@@ -27,6 +27,7 @@ return {
 				"gitignore",
 				"xml",
 				"c",
+				"cpp",
 				"java",
 			},
 			indent = { enable = true },
