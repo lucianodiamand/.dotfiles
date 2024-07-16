@@ -30,7 +30,7 @@ nmap = zz
 #set monospace-font-size=15
 
 # Webkit
-set default=charset=utf-8
+set default-charset=utf-8
 set accelerated-2d-canvas=on
 set html5-database=on
 set html5-local-storage=on
