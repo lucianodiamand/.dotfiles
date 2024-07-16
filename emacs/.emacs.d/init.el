@@ -130,6 +130,7 @@
 
 (add-hook 'org-present-after-navigate-functions 'ldd/org-present-prepare-slide)
 
+(use-package org)
 ;;(use-package command-log-mode)
 
 (custom-set-variables
