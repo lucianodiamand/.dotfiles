@@ -1,14 +1,10 @@
-# Download jfortivpn
-git clone https://github.com/lucianodiamand/jfortivpn.git
-
-cd jfortivpn
-
-./gradlew fatJar
-
-cd
+# Variables
+JFORTIVPN_CONFIG=${HOME}/.jfortivpn.yml
+OPENFORTIVPN_DIR=${HOME}/.config/openfortivpn
+OPENFORTIVPN_CONFIG=${OPENFORTIVPN_DIR}/config.cfg
 
 # Install jfortivpn config file
-cat << EOF > ${HOME}/.jfortivpn.yml
+cat << EOF > $JFORTIVPN_CONFIG
 profiles:
   - name: production
     vpn_config: ${OPENFORTIVPN_CONFIG_FILE}
@@ -26,10 +22,12 @@ profiles:
       password: ${PASSWORD_EMAIL}
 EOF
 
-# Install openfortivpn config file
-mkdir -p ${HOME}/.config/openfortivpn
+chmod 400 $JFORTIVPN_CONFIG
 
-cat << EOF > ${HOME}/.config/openfortivpn/config.cfg
+# Install openfortivpn config file
+mkdir -p $OPENFORTIVPN_DIR
+
+cat << EOF > $OPENFORTIVPN_CONFIG
 host=${HOST}
 port=443
 username=${USER}
@@ -37,4 +35,5 @@ password=${PASSWORD}
 trusted-cert=ea17752b869e7fcc8a1c45b88798c64fc157661fe55f6e52730be0b19ffb8046
 EOF
 
+chmod 400 $OPENFORTIVPN_CONFIG
 
