@@ -31,6 +31,16 @@ INCOMING=${HOME}/QubesIncoming
 DOTFILES_URL=https://github.com/lucianodiamand/.dotfiles
 VMS_CONFIG=${HOME}/.dotfiles/qubes/vms
 APT_OPTIONS=DEBIAN_FRONTEND=noninteractive
+PROXY_HOST=127.0.0.1
+PROXY_URL=http://${PROXY_HOST}
+PROXY_PORT=8082
+PROXY=${PROXY_URL}:${PROXY_PORT}
+APP_DIR=${HOME}/.local/.share/applications
+
+RED='\033[0;31m'
+BLUE='\033[0;34m'
+GREEN='\033[0;32m'
+NC='\033[0m'
 
 # Debian base software package list
 _DEBIAN_BASE_SOFT=$(tr -s [:space:] '&' <<EOF
@@ -42,11 +52,6 @@ _DEBIAN_BASE_SOFT=$(tr -s [:space:] '&' <<EOF
 EOF
 )
 
-RED='\033[0;31m'
-BLUE='\033[0;34m'
-GREEN='\033[0;32m'
-NC='\033[0m'
-
 declare -A VM_SOFT
 declare -A VM_TEMPLATE_NAMES
 declare -A VM_SERVICES
@@ -57,8 +62,12 @@ declare -A SERVICES_COMMANDS
 # VM -> Template
 
 VM_TEMPLATE_NAMES=(
-    [l2-dev]=template-dev
     [sys-vpn]=template-vpn
+    [l2-dev]=template-dev
+    [vault-pass]=template-vault
+    [vault-gpg]=template-vault
+    [cpt-dev]=template-dev
+    [orgmode]=template-orgmode
 )
 
 ###############################################################################
@@ -76,7 +85,7 @@ EOF
 
 VM_SOFT=( 
     [l2-dev]=$(tr -s [:space:] '&' <<EOF
-	neovim
+    	build-essential
 	meld
         software-properties-common
         apt-transport-https
@@ -99,6 +108,27 @@ EOF
 	openjdk-17-jdk
 EOF
     )
+    [vault-pass]=$(tr -s [:space:] '&' <<EOF
+	pass
+EOF
+    )
+    [vault-gpg]=$(tr -s [:space:] '&' <<EOF
+	qubes-gpg-split
+EOF
+    )
+    [cpt-dev]=$(tr -s [:space:] '&' <<EOF
+	meld
+EOF
+    )
+    [orgmode]=$(tr -s [:space:] '&' <<EOF
+        fd-find
+	ripgrep
+	shellcheck
+	markdown
+	emacs
+	elpa-pkg-info
+EOF
+    )
 )
 
 ###############################################################################
@@ -107,7 +137,7 @@ EOF
 
 JFORTIVPN_LINES=$(cat <<EOF
 # This is a "service unit" file for the systemd init system to launch
-# 'jfortivpn'. Drop it in /etc/systemd/system or similar to have
+# 'jfortivpn'. Drop it in /lib/systemd/system or similar to have
 # 'jfortivpn' automatically started.
 
 [Unit]
@@ -122,7 +152,7 @@ ExecStart=/usr/bin/java -jar /usr/share/java/jfortivpn/jfortivpn.jar
 Environment=LC_ALL=C.UTF-8
 
 # Work arround a nasty systemd 'feature' that kills the entire process tree
-# (including the daemon!) if any child, such as cc1plus, runs out of memory.
+# (including the daemon!) if any child runs out of memory.
 OOMPolicy=continue
 
 # Despite the name, this is rate-limited: a broken daemon will eventually fail.
@@ -138,8 +168,8 @@ SERVICES_LINES=(
 )
 
 JFORTIVPN_COMMANDS=$(cat <<EOF
-    http_proxy="http://127.0.0.1:8082" https_proxy="http://127.0.0.1:8082" git clone https://github.com/lucianodiamand/jfortivpn.git /tmp/jfortivpn
-    cd /tmp/jfortivpn; ./gradlew -Dhttp.proxyHost=127.0.0.1 -Dhttp.proxyPort=8082 -Dhttps.proxyHost=127.0.0.1 -Dhttps.proxyPort=8082 fatJar
+    http_proxy="$PROXY" https_proxy="$PROXY" git clone https://github.com/lucianodiamand/jfortivpn.git /tmp/jfortivpn
+    cd /tmp/jfortivpn; ./gradlew -Dhttp.proxyHost=${PROXY_HOST} -Dhttp.proxyPort=${PROXY_PORT} -Dhttps.proxyHost=${PROXY_HOST} -Dhttps.proxyPort=${PROXY_PORT} fatJar
     mkdir -p /usr/share/java/jfortivpn
     cp /tmp/jfortivpn/jfortivpn/build/libs/jfortivpn-project.jar /usr/share/java/jfortivpn/jfortivpn.jar
 EOF
@@ -176,7 +206,7 @@ error() {
 
 function print_help() {
     echo "Usage: ${0} (-c | -u | -d) -v VMNAME"
-    echo "  where VMNAME in sys-vpn,l2-dev"
+    echo "  where VMNAME in sys-vpn,l2-dev,vault-pass,vault-gpg,cpt-dev"
     exit 1
 }
 
@@ -310,31 +340,36 @@ function install_software () {
 
     local command="qvm-run -p $template \"sudo ${APT_OPTIONS} apt-get -y install $softwarelist"\"
     eval $command
+
+    local command2="qvm-run -p $template 'chsh -s /usr/bin/fish'"
+    eval $command2
 }
 
 function install_service () {
     local service_name=$1
-    local service_unit_lines=${SERVICES_LINES[$service_name]}
-    local service_commands=${SERVICES_COMMANDS[$service_name]}
-    echo "1: $service_commands"
+    if [ ! -z "$service_name" ]; then
+      local service_unit_lines=${SERVICES_LINES[$service_name]}
+      local service_commands=${SERVICES_COMMANDS[$service_name]}
+      echo "1: $service_commands"
 
-    if [ $DEBUG ]; then echo "--install_service: template:$template, service:$service_name"; fi
+      if [ $DEBUG ]; then echo "--install_service: template:$template, service:$service_name"; fi
 
-    qube_write_file $template "user" \
+      qube_write_file $template "user" \
         "/tmp/${service_name}.service" \
         "$service_unit_lines"
 
-    qvm-run -p $template "sudo mv /tmp/${service_name}.service /lib/systemd/system/${service_name}.service"
-    #qvm-run -p $template "sudo ln -s /lib/systemd/system/${service_name}.service /etc/systemd/system/${service_name}.service"
+      qvm-run -p $template "sudo mv /tmp/${service_name}.service /lib/systemd/system/${service_name}.service"
+      #qvm-run -p $template "sudo ln -s /lib/systemd/system/${service_name}.service /etc/systemd/system/${service_name}.service"
 
-    qube_run_commands $template "root" "$service_commands"
+      qube_run_commands $template "root" "$service_commands"
 
-    qvm-run -p $template "sudo systemctl unmask ${service_name}.service"
-    qvm-run -p $template "sudo systemctl enable ${service_name}.service"
-    qvm-run -p $template "sudo systemctl start ${service_name}.service"
+      qvm-run -p $template "sudo systemctl unmask ${service_name}.service"
+      qvm-run -p $template "sudo systemctl enable ${service_name}.service"
+      qvm-run -p $template "sudo systemctl start ${service_name}.service"
 
-    #local command="qvm-run -p $template \"sudo ${APT_OPTIONS} apt-get -y install $softwarelist"\"
-    #eval $command
+      #local command="qvm-run -p $template \"sudo ${APT_OPTIONS} apt-get -y install $softwarelist"\"
+      #eval $command
+    fi
 }
 
 function create_template () {
@@ -351,8 +386,19 @@ function create_template () {
     install_software $template $_DEBIAN_BASE_SOFT
     install_software $template $software
 
-    serviceslist=$(echo $services | tr '&' ' ')
-    install_service $serviceslist
+    qvm-run -p $template "http_proxy=http://127.0.0.1:8082 https_proxy=http://127.0.0.1:8082 curl -L -o /tmp/nvim-linux64.tar.gz https://github.com/neovim/neovim/releases/download/v0.9.4/nvim-linux64.tar.gz"
+    qvm-run -p $template "tar xzvf /tmp/nvim-linux64.tar.gz --directory /tmp"
+    qvm-run -p $template "sudo cp -a /tmp/nvim-linux64/bin/* /usr/local/bin"
+    qvm-run -p $template "sudo cp -a /tmp/nvim-linux64/lib/* /usr/local/lib"
+    qvm-run -p $template "sudo cp -a /tmp/nvim-linux64/share/* /usr/local/share"
+    qvm-run -p $template "sudo cp -a /tmp/nvim-linux64/man/* /usr/local/man"
+
+    if [ -z "$services" ]; then
+        print_info "Empty servicies"
+    else
+	serviceslist=$(echo $services | tr '&' ' ')
+        install_service $serviceslist
+    fi
     qvm-sync-appmenus $template
     qvm-shutdown $template
 }
@@ -378,11 +424,35 @@ function create_l2-dev_appvms() {
 
     if [ "$DEBUG" ]; then echo "--create_${appvm}_appvms configuring client"; fi
 
-    #qvm-copy-to-vm $appvm ${CONFIGDIR}/${appvm}/configure_client
     echo -e "\n  configuring $appvm: install nvm, node, angular/cli"
     qvm-run $appvm "chmod +x ${VMS_CONFIG}/${appvm}/configure_client"
     qvm-run $appvm "${VMS_CONFIG}/${appvm}/configure_client"
-    #qvm-run $appvm "rm -rf $INCOMING"
+    qvm-shutdown $appvm 
+}
+
+function create_cpt-dev_appvms() {
+    local template=$1
+    local appvm=$2
+
+    if [ "$DEBUG" ]; then echo "--create_${appvm}_appvms TEMPLATE:$template, APPVM:$appvm"; fi
+    check_vm $appvm
+
+    qvm-create --class AppVM \
+	--template $template \
+	--label yellow \
+	--prop=maxmem=8192 \
+	--prop=memory=1024 \
+	$appvm
+    qvm-volume extend $appvm:private 10240mb
+
+    qvm-start $appvm
+    config_user $appvm
+
+    if [ "$DEBUG" ]; then echo "--create_${appvm}_appvms configuring client"; fi
+
+    echo -e "\n  configuring $appvm: install nvm, node, angular/cli"
+    qvm-run $appvm "chmod +x ${VMS_CONFIG}/${appvm}/configure_client"
+    qvm-run $appvm "${VMS_CONFIG}/${appvm}/configure_client"
     qvm-shutdown $appvm 
 }
 
@@ -408,7 +478,6 @@ function create_sys-vpn_appvms() {
     if [ "$DEBUG" ]; then echo "--create_${appvm}_appvms configuring client"; fi
 
     qvm-run $appvm "git clone https://github.com/lucianodiamand/jfortivpn.git"
-    #qvm-copy-to-vm $appvm ${CONFIGDIR}/${appvm}/configure_client
     echo -e "\n  configuring $appvm: install jfortivpn"
     read -p "  HOST: " HOST
     read -p "  USER: " USER
@@ -419,11 +488,64 @@ function create_sys-vpn_appvms() {
     read -p "  PASSWORD EMAIL: " PASSWORD_EMAIL
     qvm-run $appvm "chmod +x ${VMS_CONFIG}/${appvm}/configure_client"
     qvm-run $appvm "HOST=${HOST} USER=${USER} PASSWORD=${PASSWORD} OPENFORTIVPN_CONFIG_FILE=${OPENFORTIVPN_CONFIG_FILE} SENDER=${SENDER} EMAIL=${EMAIL} PASSWORD_EMAIL=${PASSWORD_EMAIL} ${VMS_CONFIG}/${appvm}/configure_client"
-    #qvm-run $appvm "rm -rf $INCOMING"
     qvm-shutdown $appvm 
 }
 
-function config_l2-dev_firewall() {
+function create_vault-pass_appvms() {
+    local template=$1
+    local appvm=$2
+    local soft=$3
+
+    if [ "$DEBUG" ]; then echo "--create_${appvm}_appvms TEMPLATE:$template, APPVM:$appvm"; fi
+    check_vm $appvm
+
+    qvm-create --class AppVM \
+	--template $template \
+	--label black \
+	--prop=maxmem=8192 \
+	--prop=memory=1024 \
+	$appvm
+    #qvm-volume extend $appvm:private 10240mb
+
+    qvm-start $appvm
+    #config_user $appvm
+
+    if [ "$DEBUG" ]; then echo "--create_${appvm}_appvms configuring client"; fi
+
+    #echo -e "\n  configuring $appvm: install nvm, node, angular/cli"
+    #qvm-run $appvm "chmod +x ${VMS_CONFIG}/${appvm}/configure_client"
+    #qvm-run $appvm "${VMS_CONFIG}/${appvm}/configure_client"
+    qvm-shutdown $appvm 
+}
+
+function create_org_appvms() {
+    local template=$1
+    local appvm=$2
+    local soft=$3
+
+    if [ "$DEBUG" ]; then echo "--create_${appvm}_appvms TEMPLATE:$template, APPVM:$appvm"; fi
+    check_vm $appvm
+
+    qvm-create --class AppVM \
+	--template $template \
+	--label purple \
+	--prop=maxmem=8192 \
+	--prop=memory=1024 \
+	$appvm
+    #qvm-volume extend $appvm:private 10240mb
+
+    qvm-start $appvm
+    #config_user $appvm
+
+    if [ "$DEBUG" ]; then echo "--create_${appvm}_appvms configuring client"; fi
+
+    #echo -e "\n  configuring $appvm: install nvm, node, angular/cli"
+    #qvm-run $appvm "chmod +x ${VMS_CONFIG}/${appvm}/configure_client"
+    #qvm-run $appvm "${VMS_CONFIG}/${appvm}/configure_client"
+    qvm-shutdown $appvm 
+}
+
+function config_appvm-dev_firewall() {
     local appvm=$1
 
     if [ "$DEBUG" ]; then echo "--config_${appvm}_firewall APPVM:$appvm"; fi
@@ -431,6 +553,7 @@ function config_l2-dev_firewall() {
     qvm-firewall $appvm del --rule-no 0
     qvm-firewall $appvm add accept dstports=53 dsthost=10.139.1.1 proto=tcp comment="ns1"
     qvm-firewall $appvm add accept dstports=53 dsthost=10.139.1.2 proto=tcp comment="ns2"
+    qvm-firewall $appvm add accept dstports=22 dsthost=bitbucket.org proto=tcp comment="bitbucket"
     qvm-firewall $appvm add accept dstports=443 dsthost=raw.githubusercontent.com proto=tcp comment="nvm"
     #qvm-firewall $appvm add accept dstports=80 dsthost=www.paginasblancas.com.ar proto=tcp comment="phone"
     #qvm-firewall $appvm add accept dstports=53 dsthost=myip.opendns.com proto=udp comment="myip"
@@ -438,9 +561,20 @@ function config_l2-dev_firewall() {
     qvm-firewall $appvm add accept dstports=443 dsthost=nodejs.org proto=tcp comment="nvm install"
     qvm-firewall $appvm add accept dstports=443 dsthost=registry.npmjs.org proto=tcp comment="npm i"
     qvm-firewall $appvm add accept dstports=443 dsthost=deb.debian.org proto=tcp comment="apt-get"
+    qvm-firewall $appvm add accept dstports=443 dsthost=api.github.com proto=tcp comment="Mason"
+    qvm-firewall $appvm add accept dstports=443 dsthost=20.201.28.149 proto=tcp comment="Mason"
     qvm-firewall $appvm add accept specialtarget=dns
     qvm-firewall $appvm add accept proto=icmp
     qvm-firewall $appvm add drop comment="no connection to outsize"
+}
+
+function remove_apps_from_launcher() {
+    local appvm=$1
+
+    if [ "$DEBUG" ]; then echo "--config_${appvm}_firewall APPVM:$appvm"; fi
+
+    local removeapp=`echo $appvm | sed 's/-/_d/g'`
+    find ${HOME}/.local/share/applications -type f -name "*${removeapp}*" -print0 | xargs --null -I{} mv {} {}.orig
 }
 
 # action: create, update, delete
@@ -508,28 +642,44 @@ if [ $DEBUG ]; then echo "--VM:$VM, ACTION:$ACTION"; fi
 
 case $ACTION in
     CREATE)
+        if [ $DEBUG ]; then echo "--creating $VM"; fi
+        TEMPLATE=${VM_TEMPLATE_NAMES[$VM]}
+        SOFTWARE=${VM_SOFT[$VM]}
+	SERVICES=${VM_SERVICES[$TEMPLATE]}
+        create_template $TEMPLATE $SOFTWARE $SERVICES
+
         case $VM in
             sys-vpn)
-                if [ $DEBUG ]; then echo "--creating $VM"; fi
-                TEMPLATE=${VM_TEMPLATE_NAMES[$VM]}
-                SOFTWARE=${VM_SOFT[$VM]}
-		SERVICES=${VM_SERVICES[$TEMPLATE]}
-
-                create_template $TEMPLATE $SOFTWARE $SERVICES
                 create_sys-vpn_appvms $TEMPLATE $VM
+		remove_apps_from_launcher $VM
                 ;;
             l2-dev)
-                if [ $DEBUG ]; then echo "--creating $VM"; fi
-                TEMPLATE=${VM_TEMPLATE_NAMES[$VM]}
-                SOFTWARE=${VM_SOFT[$VM]}
-
-                create_template $TEMPLATE $SOFTWARE
                 create_l2-dev_appvms $TEMPLATE $VM
-		config_l2-dev_firewall $VM
+		remove_apps_from_launcher $VM
+		config_appvm-dev_firewall $VM
+		mv ${APP_DIR}/org.qubes-os.vm._l2_ddev.org.gnome.Nautilus.desktop \
+			${APP_DIR}/org.qubes-os.vm._l2_ddev.org.gnome.Nautilus.desktop.orig
+                ;;
+            vault-pass)
+                create_vault-pass_appvms $TEMPLATE $VM
+                ;;
+            vault-gpg)
+                create_vault-gpg_appvms $TEMPLATE $VM
+                ;;
+            cpt-dev)
+                create_cpt-dev_appvms $TEMPLATE $VM
+		remove_apps_from_launcher $VM
+		config_appvm-dev_firewall $VM
+                ;;
+            orgmode)
+                create_org_appvms $TEMPLATE $VM
+		remove_apps_from_launcher $VM
 
-		#appdir=".local/share/applications/org.qubes-os.vm._dev_dl2."
-		#appfirefox="firefox-esr.desktop"
-		#qvm-run -p l2-dev "mv ${appdir}${appfirefox} ${appdir}${appfirefox}.orig" 
+		# elpa.gnu.org
+		# elpa.nongnu.org
+		# melpa.org
+		# orgmode.org
+		# package-install nerd-icons
                 ;;
             *)
                 echo "ERROR: create: unknown vm: $VM"
@@ -538,9 +688,9 @@ case $ACTION in
         esac
         ;;
     UPDATE)
+        if [ $DEBUG ]; then echo "--updating $VM"; fi
         case $VM in
             l2-dev)
-                if [ $DEBUG ]; then echo "--updating $VM"; fi
                 TEMPLATE=${VM_TEMPLATE_NAMES[$VM]}
                 SOFTWARE=${VM_SOFT[$VM]}
 
@@ -556,10 +706,9 @@ case $ACTION in
         esac
         ;;
     DELETE)
+        if [ $DEBUG ]; then echo "--deleting $VM"; fi
         case $VM in
             l2-dev)
-                if [ $DEBUG ]; then echo "--deleting $VM"; fi
-
                 qvm-shutdown $VM
                 check_vm $VM
                 ;;
