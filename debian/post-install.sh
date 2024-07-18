@@ -118,6 +118,15 @@ GUIX_PROFILE="/home/user/.config/guix/current"
 . "$GUIX_PROFILE/etc/profile"
 EOF
 
+	git clone https://github.com/lucianodiamand/.dotfiles.git
+	mv /home/user/.config/i3/config /home/user/.config/i3/config.bak
+	cd /home/user/.dotfiles
+	stow i3
+	stow i3status
+	stow alacritty
+	stow nvim
+	stow vimb
+	stow emacs
 }
 
 function install-nodejs() {
@@ -193,7 +202,7 @@ restore-desktop-icons
 enable-auto-login
 install-oracle-client
 
-#sudo rm /home/user/post-install.sh > /dev/null
+sudo rm /home/user/post-install.sh > /dev/null
 history -cw
 
 sudo reboot
