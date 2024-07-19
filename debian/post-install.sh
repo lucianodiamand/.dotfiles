@@ -113,10 +113,23 @@ function guix-init-install() {
 	guix install vimb
 }
 
+function guix-finish() {
+  guix pull
+  guix upgrade
+}
+
 function setup-home() {
 	cat >> /home/user/.bashrc << "EOF"
 
 GUIX_PROFILE="/home/user/.config/guix/current"
+. "$GUIX_PROFILE/etc/profile"
+EOF
+
+	source "$GUIX_PROFILE/etc/profile"
+
+	cat >> /home/user/.bashrc << "EOF"
+
+GUIX_PROFILE="/home/user/.guix-profile"
 . "$GUIX_PROFILE/etc/profile"
 EOF
 
@@ -137,9 +150,9 @@ function install-nodejs() {
 	#curl -sL https://deb.nodesource.com/setup_7.x | sudo -E bash -
 	#sudo apt-get install -y nodejs
 	# nvm install
-	curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
-	nvm install v20
-	nvm use v20
+	#curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
+	wget -qO- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
+	nvm install --lts
 }
 
 function apt-finish() {
@@ -197,6 +210,7 @@ apt-init-remove
 apt-init-install
 guix-init
 guix-init-install
+guix-finish
 setup-home
 install-nodejs
 apt-finish
