@@ -114,7 +114,7 @@ function guix-init-install() {
 }
 
 function setup-home() {
-	cat >> /home/user/.bashrc << EOF
+	cat >> /home/user/.bashrc << "EOF"
 
 GUIX_PROFILE="/home/user/.config/guix/current"
 . "$GUIX_PROFILE/etc/profile"
