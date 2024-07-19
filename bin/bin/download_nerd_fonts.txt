@@ -1,0 +1,6 @@
+#!/bin/bash
+
+wget -c https://github.com/ryanoasis/nerd-fonts/releases/download/v3.2.1/Hack.zip -P /tmp
+mkdir -p /home/user/.local/share/fonts
+unzip /tmp/Hack.zip -d /home/user/.local/share/fonts
+fc-cache -fv
