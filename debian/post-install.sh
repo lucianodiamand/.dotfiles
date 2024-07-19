@@ -175,6 +175,44 @@ function enable-color-prompt() {
 	sed -i -e 's/#force_color_prompt=yes/force_color_prompt=yes/g' /home/user/.bashrc
 }
 
+function config-ssh() {
+  mkdir /home/user/.ssh
+  ssh-keygen -t ed25519 -f /home/user/.ssh/github.personal.repo.key -C "My Github repo"
+  ssh-keygen -t ed25519 -f /home/user/.ssh/hostinger.server.key -C "Hostinger vps server"
+  ssh-keygen -t ed25519 -f /home/user/.ssh/bitbucket.persona.repo.key -C "My Bitbucket repo"
+  ssh-keygen -t ed25519 -f /home/user/.ssh/bitbucket.l2.repo.key -C "L2 repo"
+  
+  cat << EOF > /home/user/.ssh/config
+# Hosts
+
+Host Hostinger
+  HostName 82.180.131.121
+  User root
+  IdentityFile ~/.ssh/hostinger.server.key
+
+Host github.com
+  IdentityFile ~/.ssh/github.personal.repo.key
+
+Host bitbucket-personal
+  HostName bitbucket.org
+  IdentityFile ~/.ssh/bitbucket.repo.key
+
+Host bitbucket-l2
+  HostName bitbucket.org
+  IdentityFile ~/.ssh/bitbucket.l2.repo.key
+  IdentitiesOnly yes
+EOF
+
+}
+
+function config-fish() {
+  # oh my fish
+  wget -qO- https://raw.githubusercontent.com/oh-my-fish/oh-my-fish/master/bin/install | fish
+  omf install bobthefish
+  omf install zoxide
+  omf install nvm
+}
+
 function restore-user-profile() {
         echo restore-user-profile
 	#sudo rm -rf /home/user/.config > /dev/null
@@ -216,6 +254,8 @@ install-nodejs
 apt-finish
 install-fonts
 enable-color-prompt
+config-ssh
+config-fish
 restore-user-profile
 restore-desktop-icons
 enable-auto-login
