@@ -118,6 +118,8 @@ GUIX_PROFILE="/home/user/.config/guix/current"
 . "$GUIX_PROFILE/etc/profile"
 EOF
 
+	source "$GUIX_PROFILE/etc/profile"
+
 	git clone https://github.com/lucianodiamand/.dotfiles.git
 	mv /home/user/.config/i3/config /home/user/.config/i3/config.bak
 	cd /home/user/.dotfiles
@@ -193,6 +195,7 @@ apt-init-remove
 apt-init-install
 guix-init
 guix-init-install
+setup-home
 install-nodejs
 apt-finish
 install-fonts
