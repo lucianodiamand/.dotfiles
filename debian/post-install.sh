@@ -55,7 +55,8 @@ function guix-init() {
 	#sudo chown root:root /etc/apt/apt.conf.d/00InstallRecommends
 	sudo -i guix pull
 	sudo service guix-daemon restart
-        sudo -i guix install glibc-locales
+  sudo -i guix install glibc-locales
+  sudo -i guix install nss-certs
 	sudo -i guix install unzip
 
 	guix pull
@@ -64,6 +65,7 @@ function guix-init() {
 
 function guix-init-install() {
 	guix install glibc-locales
+  guix install nss-certs
 	guix install git
 	guix install stow
 	
@@ -121,7 +123,7 @@ EOF
 	source "$GUIX_PROFILE/etc/profile"
 
 	git clone https://github.com/lucianodiamand/.dotfiles.git
-	mv /home/user/.config/i3/config /home/user/.config/i3/config.bak
+	mv /home/user/.config/i3 /home/user/.config/i3.bak
 	cd /home/user/.dotfiles
 	stow i3
 	stow i3status
