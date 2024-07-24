@@ -46,6 +46,16 @@ bindsym XF86AudioLowerVolume exec --no-startup-id pactl set-sink-volume @DEFAULT
 bindsym XF86AudioMute exec --no-startup-id pactl set-sink-mute @DEFAULT_SINK@ toggle && $refresh_i3status
 bindsym XF86AudioMicMute exec --no-startup-id pactl set-source-mute @DEFAULT_SOURCE@ toggle && $refresh_i3status
 
+# Screenshots
+bindsym Print exec --no-startup-id maim "/home/$USER/pictures/$(date)"
+bindsym $mod+Print exec --no-startup-id maim --window $(xdotool getactivewindow) "/home/$USER/pictures/$(date)"
+bindsym Shift+Print exec --no-startup-id maim --select "/home/$USER/pictures/$(date)"
+
+## Clipboard Screenshots
+bindsym Ctrl+Print exec --no-startup-id maim | xclip -selection clipboard -t image/png
+bindsym Ctrl+$mod+Print exec --no-startup-id maim --window $(xdotool getactivewindow) | xclip -selection clipboard -t image/png
+bindsym Ctrl+Shift+Print exec --no-startup-id maim --select | xclip -selection clipboard -t image/png
+
 client.background       dom0            #c4c4c4
 client.focused          dom0    #f7f7f7 #f5f5f5 #000000 #0a0a0a
 client.focused_inactive dom0    #f7f7f7 #dcdcdc #191919 #232323
