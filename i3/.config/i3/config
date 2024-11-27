@@ -18,7 +18,7 @@ font xft:HackNerdFontMono 18
 
 # This font is widely installed, provides lots of unicode glyphs, right-to-left
 # text rendering and scalability on retina/hidpi displays (thanks to pango).
-font pango: Hack Nerd Font Bold 11
+font pango: Hack Nerd Font Bold 9
 
 # Add a gap between windows (>= 4.22)
 gaps inner 2
