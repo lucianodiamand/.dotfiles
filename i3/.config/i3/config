@@ -289,3 +289,6 @@ for_window [class="code"] move to workspace $ws3
 for_window [class="meld"] move to workspace $ws8
 for_window [class="Tor Browser"] move to workspace $ws7
 for_window [class="Nyxt"] move to workspace $ws2
+
+for_window [class="^.*"] border pixel 0
+
