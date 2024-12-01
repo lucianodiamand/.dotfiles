@@ -8,7 +8,7 @@ general {
         interval = 5
 }
 
-order += "ipv6"
+#order += "ipv6"
 order += "wireless wlp2s0"
 order += "ethernet enp0s3"
 order += "battery 0"
