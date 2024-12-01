@@ -188,3 +188,12 @@
 (use-package lua-mode
 	     :mode "\\.lua\\'")
 
+;; auth-source-pass ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; enable auth-source-pass
+(use-package auth-source-pass
+	     :ensure t
+	     :config
+	     (auth-source-pass-enable))
+
+(setq auth-sources '(password-store))
+
