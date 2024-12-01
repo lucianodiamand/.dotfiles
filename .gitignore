@@ -1,4 +1,9 @@
 emacs/.emacs.d/auto-save-list
+emacs/.emacs.d/eln-cache
+emacs/.emacs.d/elpa
+emacs/.emacs.d/tramp
+emacs/.emacs.d/transient
+emacs/.emacs.d/url
 
 vimb/.config/vimb/closed
 vimb/.config/vimb/command
@@ -6,4 +11,5 @@ vimb/.config/vimb/cookies.db
 vimb/.config/vimb/history
 
 nvim/.config/nvim/lazy-lock.json
+
 
