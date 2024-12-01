@@ -1,5 +1,8 @@
+;; Override some of the defaults
 ;; Disable start up logo
-(setq inhibit-startup-message t)
+(setq inhibit-startup-message t
+      display-line-numbers-type 'relative)
+(global-display-line-numbers-mode)
 
 ;; Disable visible scroolbar
 (scroll-bar-mode -1)
