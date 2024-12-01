@@ -75,6 +75,12 @@
 	     :config
 	     (evil-commentary-mode))
 
+;; vertico ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(use-package vertico
+	     :ensure t
+	     :init
+	     (vertico-mode))
+
 ;; Install org-present if need
 (unless (package-installed-p 'org-present)
   (package-install 'org-present))
