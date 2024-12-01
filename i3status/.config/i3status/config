@@ -23,6 +23,7 @@ wireless wlp2s0 {
 
 ethernet enp0s3 {
         format_up = "E: %ip (%speed)"
+	format_down = ""
 }
 
 battery 0 {
