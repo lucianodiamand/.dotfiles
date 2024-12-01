@@ -49,6 +49,32 @@
 
 (load-theme 'solarized-dark t)
 
+;; evil ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(use-package evil
+	     :ensure t
+	     :init
+	     (setq evil-want-integration t)
+	     (setq evil-want-keybinding nil)
+	     (setq evil-want-C-u-scroll t)
+	     :config
+	     (evil-mode	1))
+
+(use-package evil-collection
+	     :after evil
+	     :ensure t
+	     :config
+	     (evil-collection-init))
+
+(use-package evil-surround
+	     :ensure t
+	     :config
+	     (global-evil-surround-mode 1))
+
+(use-package evil-commentary
+	     :ensure t
+	     :config
+	     (evil-commentary-mode))
+
 ;; Install org-present if need
 (unless (package-installed-p 'org-present)
   (package-install 'org-present))
