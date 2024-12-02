@@ -27,9 +27,10 @@ ethernet enp0s3 {
 	format_down = ""
 }
 
+# icons extracted from https://www.nerdfonts.com/cheat-sheet
 battery 0 {
         format = "%status %percentage %remaining %emptytime"
-        format_down = "󱉝"
+        format_down = "󱉞"
         status_chr = "󰂄"
         status_bat = "󰂂"
         status_unk = "󰂃"
