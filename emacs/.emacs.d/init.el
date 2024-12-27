@@ -1,6 +1,7 @@
 ;; Override some of the defaults
 ;; Disable start up logo
 (setq inhibit-startup-message t
+      inhibit-splash-screen t
       display-line-numbers-type 'relative)
 (global-display-line-numbers-mode)
 
@@ -16,6 +17,9 @@
 ;; Disable the menu bar
 (menu-bar-mode -1)
 
+;;(transient-mark-mode t)
+;;(setq yank-interactive nil)
+
 ;; Set up the visible bell
 (setq visible-bell t)
 
@@ -23,6 +27,15 @@
 (add-to-list 'default-frame-alist '(undecorated . t))
 
 (set-face-attribute 'default nil :font "Hack Nerd Font Mono" :height 140)
+
+(use-package display-fill-column-indicator
+             :ensure nil
+             :custom
+             (display-fill-column-indicator-character ?|)
+             (display-fill-column-indicator-column 80)
+             :custom-face
+             (fill-column-indicator ((t (:foreground "VioletRed2"))))
+             :hook (prog-mode . display-fill-column-indicator-mode))
 
 ;; Initialize package sources
 (require 'package)
@@ -51,35 +64,89 @@
 
 ;; evil ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (use-package evil
-	     :ensure t
-	     :init
-	     (setq evil-want-integration t)
-	     (setq evil-want-keybinding nil)
-	     (setq evil-want-C-u-scroll t)
-	     :config
-	     (evil-mode	1))
+  :ensure t
+  :init
+  (setq evil-want-integration t)
+  (setq evil-want-keybinding nil)
+  (setq evil-want-C-u-scroll t)
+  :config
+  (evil-mode	1))
 
 (use-package evil-collection
-	     :after evil
-	     :ensure t
-	     :config
-	     (evil-collection-init))
+  :after evil
+  :ensure t
+  :config
+  (evil-collection-init))
 
 (use-package evil-surround
-	     :ensure t
-	     :config
-	     (global-evil-surround-mode 1))
+  :ensure t
+  :config
+  (global-evil-surround-mode 1))
 
 (use-package evil-commentary
-	     :ensure t
-	     :config
-	     (evil-commentary-mode))
+  :ensure t
+  :config
+  (evil-commentary-mode))
+
+;; org-mode ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(require 'org)
+
+;; agenda ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(setq org-agenda-files (quote ("~/dev/org")))
+
+;; Disable keys in org-mode
+;;   C-c [
+;;   C-c ]
+;;   C-c ;
+;;   C-c C-x C-q  cancelling the clock (we never want this)
+(add-hook 'org-mode-hook
+          '(lambda ()
+             ;; Undefine C-c [ and C-c ] since this breaks my
+             ;; org-agenda files when directories are include it
+             ;; expands the files in the directories individually
+             (org-defkey org-mode-map "\C-c[" 'undefined)
+             (org-defkey org-mode-map "\C-c]" 'undefined)
+             (org-defkey org-mode-map "\C-c;" 'undefined)
+             (org-defkey org-mode-map "\C-c\C-x\C-q" 'undefined))
+          'append)
+
+(define-key global-map "\C-ca" 'org-agenda)
+
+(setq org-todo-keyword-faces
+     (quote (("TODO" :foreground "red" :weight bold)
+             ("NEXT" :foreground "blue" :weight bold)
+             ("DONE" :foreground "forest green" :weight bold)
+             ("WAITING" :foreground "orange" :weight bold)
+             ("HOLD" :foreground "magenta" :weight bold)
+             ("CANCELLED" :foreground "forest green" :weight bold)
+             ("MEETING" :foreground "forest green" :weight bold)
+             ("PHONE" :foreground "forest green" :weight bold))))
+
+(setq calendar-date-stype 'european)
+(setq calendar-week-start-day 1)
+
+;; org-gcal ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(setq org-gcal-client-id ""
+      org-gcal-client-secret ""
+      org-gcal-fetch-file-alist '(("lucianodiamand@gmail.com" . "~/dev/org/personal-gmail.org")))
 
 ;; vertico ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (use-package vertico
-	     :ensure t
-	     :init
-	     (vertico-mode))
+  :ensure t
+  :init
+  (vertico-mode))
+
+;; c3po.el ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(use-package gptel
+             :ensure t
+             :config
+             (setq auth-sources '("~/.authinfo"))
+             (setq gptel-api-key (auth-source-pick-first-password :host "api.openai.com"))
+             (setq gptel-model "gpt-3.5-turbo")
+             (setq qptel-max-tokens 1000)
+             (setq gptel-debug t)
+             (setq gptel-retry-on-error t)
+             (setq gptel-retry-delay 5))
 
 ;; Install org-present if need
 (unless (package-installed-p 'org-present)
@@ -169,31 +236,120 @@
 (use-package org)
 ;;(use-package command-log-mode)
 
+(org-babel-do-load-languages
+ 'org-babel-load-languages
+ '((shell . t)))
+
+;; Languages ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; Lua
+(use-package lua-mode
+  :mode "\\.lua\\'")
+
+(use-package treesit-auto
+  :custom
+  (treesit-auto-install 'prompt)
+  :config
+  (setq treesit-auto-langs '(javascript typescript tsx css html))
+  (treesit-auto-add-to-auto-mode-alist '(javascript typescript tsx css html))
+  (global-treesit-auto-mode))
+
+(use-package lsp-mode
+  :commands (lsp lsp-deferred)
+  :hook ((prog-mode . lsp-deferred)
+         (lsp-mode . lsp-enabled-which-key-integration))
+  :custom
+  (read-process-output-max (* 1024 1024))
+  :init
+  (setq lsp-completion-provider :none)
+  (setq lsp-keymap-prefix "C-c")
+  (setq lsp-diagnostics-provider :flycheck))
+
+(use-package lsp-ui
+  :hook (lsp-mode . lsp-ui-mode))
+
+(use-package corfu
+  :custom
+  (corfu-cycle t)
+  (corfu-auto t)
+  (corfu-auto-prefix 2)
+  (corfu-auto-delay 0)
+  (corfu-popupinfo-delay '(0.5 . 0.2))
+  (corfu-preview-current 'insert)
+  (corfu-preselect 'prompt)
+  (corfu-on-exact-match nil)
+  :bind (:map corfu-map
+              ("TAB"        . corfu-next)
+              ([tab]        . corfu-next)
+              ("S-TAB"      . corfu-previous)
+              ([backtab]    . corfu-previous)
+              ("S-<return>" . corfu-insert)
+              ("RET"        . corfu-insert))
+  :init
+  (global-corfu-mode)
+  (corfu-history-mode))
+
+(use-package nerd-icons-corfu
+  :after corfu
+  :init (add-to-list 'corfu-margin-formatters #'nerd-icons-corfu-formatter))
+
+(use-package flycheck
+  :hook (lsp-mode . flycheck-mode)
+  :bind (:map flycheck-mode-map
+              ("M-n" . flycheck-previous-error)
+              ("M-p" . flycheck-next-error))
+  :custom (flycheck-display-errors-delay .3))
+
+(use-package apheleia
+  :hook (prog-mode . apheleia-mode)
+  :config
+  (setf (alist-get 'prettier apheleia-formatters)
+        '("prettier" "--stdin-filepath" filepath)))
+
+(use-package projectile)
+(use-package yasnippet
+  :config
+  (yas-global-mode))
+(use-package hydra)
+(use-package company)
+(use-package which-key
+  :config (which-key-mode))
+(use-package lsp-java
+  :config
+  (add-hook 'java-mode-hook 'lsp))
+(use-package dap-mode
+  :after
+  lsp-mode
+  :config (dap-auto-configure-mode))
+(use-package dap-java
+  :ensure nil)
+(use-package helm-lsp)
+(use-package helm
+  :config
+  (helm-mode))
+(use-package lsp-treemacs)
+
+;; auth-source-pass ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; enable auth-source-pass
+(use-package auth-source-pass
+  :ensure t
+  :config
+  (auth-source-pass-enable))
+
+(setq auth-sources '(password-store))
+
 (custom-set-variables
  ;; custom-set-variables was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
- '(package-selected-packages '(command-log-mode)))
+ '(helm-minibuffer-history-key "M-p")
+ '(package-selected-packages
+   '(gptel apheleia flycheck nerd-icons-corfu corfu lsp-ui lsp-mode treesit-auto lua-mode command-log-mode)))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  )
-
-;; Languages ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-;; Lua
-(use-package lua-mode
-	     :mode "\\.lua\\'")
-
-;; auth-source-pass ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; enable auth-source-pass
-(use-package auth-source-pass
-	     :ensure t
-	     :config
-	     (auth-source-pass-enable))
-
-(setq auth-sources '(password-store))
 
