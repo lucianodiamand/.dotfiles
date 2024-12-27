@@ -4,6 +4,11 @@ emacs/.emacs.d/elpa
 emacs/.emacs.d/tramp
 emacs/.emacs.d/transient
 emacs/.emacs.d/url
+emacs/.emacs.d/.cache/
+emacs/.emacs.d/.lsp-session-v1
+emacs/.emacs.d/tree-sitter
+emacs/.emacs.d/.chatgpt-shell.el
+emacs/.emacs.d/init.el~
 
 vimb/.config/vimb/closed
 vimb/.config/vimb/command
