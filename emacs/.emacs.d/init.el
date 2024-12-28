@@ -5,6 +5,25 @@
       display-line-numbers-type 'relative)
 (global-display-line-numbers-mode)
 
+;; Enable the fill-column indicator globally
+(global-display-fill-column-indicator-mode t)
+(setq-default fill-column 80)
+
+;; Customize the appearance to use a block character
+(set-face-attribute 'fill-column-indicator nil
+                    :foreground "gray"
+                    :background nil
+                    :family "monospace")
+                    ;;:inherit nil) ;; Prevent inheriting other styles
+
+;; Custom function to use a block character for the column indicator
+(defun my/set-fill-column-indicator-block-character ()
+  "Change the fill-column indicator to use a block character."
+  (setq display-fill-column-indicator-character ?█))  ; Set the block character
+
+;; Apply the custom character
+(add-hook 'display-fill-column-indicator-mode-hook 'my/set-fill-column-indicator-block-character)
+
 ;; Disable visible scroolbar
 (scroll-bar-mode -1)
 ;; Disable the toolbar
@@ -27,15 +46,6 @@
 (add-to-list 'default-frame-alist '(undecorated . t))
 
 (set-face-attribute 'default nil :font "Hack Nerd Font Mono" :height 140)
-
-(use-package display-fill-column-indicator
-             :ensure nil
-             :custom
-             (display-fill-column-indicator-character ?|)
-             (display-fill-column-indicator-column 80)
-             :custom-face
-             (fill-column-indicator ((t (:foreground "VioletRed2"))))
-             :hook (prog-mode . display-fill-column-indicator-mode))
 
 ;; Initialize package sources
 (require 'package)
@@ -270,12 +280,7 @@
                                               ("/personal-gmail/Sent" . ?s)
                                               ("/personal-gmail/Trash" . ?t)))
                    (user-mail-address      . "lucianodiamand@gmail.com")
-                   (user-full-name         . "Luciano Diamand")
-                   (smtpmail-smtp-user     . "lucianodiamand@gmail.com")
-                   (smtpmail-smtp-server   . "smtp.gmail.com")
-                   (smtpmail-smtp-auth-credentials nil)
-                   (smtpmail-starttls-credentials nil)
-                   (smtpmail-smtp-service  . 587)))
+                   (user-full-name         . "Luciano Diamand")))
 
          ,(make-mu4e-context
            :name "IPS Gmail"
@@ -285,12 +290,7 @@
                                               ("/ips/Sent" . ?s)
                                               ("/ips/Trash" . ?t)))
                    (user-mail-address      . "ldiamand@ips.edu.ar")
-                   (user-full-name         . "Luciano Diamand")
-                   (smtpmail-smtp-user     . "ldiamand@ips.edu.ar")
-                   (smtpmail-smtp-server   . "smtp.gmail.com")
-                   (smtpmail-smtp-auth-credentials nil)
-                   (smtpmail-starttls-credentials nil)
-                   (smtpmail-smtp-service  . 587)))
+                   (user-full-name         . "Luciano Diamand")))
 
          ,(make-mu4e-context
            :name "TheLabTech Gmail"
@@ -300,12 +300,8 @@
                                               ("/thelabtech/Sent" . ?s)
                                               ("/thelabtech/Trash" . ?t)))
                    (user-mail-address      . "luciano.diamand@thelabtech.com.ar")
-                   (user-full-name         . "Luciano Diamand")
-                   (smtpmail-smtp-user     . "luciano.diamand@thelabtech.com.ar")
-                   (smtpmail-smtp-server   . "smtp.gmail.com")
-                   (smtpmail-smtp-auth-credentials nil)
-                   (smtpmail-starttls-credentials nil)
-                   (smtpmail-smtp-service  . 587)))
+                   (user-full-name         . "Luciano Diamand")))
+
         ,(make-mu4e-context
            :name "Yahoo"
            :match-func (lambda (msg) (when msg
@@ -314,12 +310,8 @@
                                               ("/yahoo/Sent" . ?s)
                                               ("/yahoo/Trash" . ?t)))
                    (user-mail-address      . "lucianodiamand@yahoo.com")
-                   (user-full-name         . "Luciano Diamand")
-                   (smtpmail-smtp-user     . "lucianodiamand@yahoo.com")
-                   (smtpmail-smtp-server   . "smtp.yahoo.com")
-                   (smtpmail-smtp-auth-credentials nil)
-                   (smtpmail-starttls-credentials nil)
-                   (smtpmail-smtp-service  . 465)))
+                   (user-full-name         . "Luciano Diamand")))
+
          ,(make-mu4e-context
            :name "UTN"
            :match-func (lambda (msg) (when msg
@@ -328,12 +320,8 @@
                                               ("/frro/Sent" . ?s)
                                               ("/frro/Trash" . ?t)))
                    (user-mail-address      . "ldiamand@frro.utn.edu.ar")
-                   (user-full-name         . "Luciano Diamand")
-                   (smtpmail-smtp-user     . "ldiamand")
-                   (smtpmail-smtp-server   . "mail.frro.utn.edu.ar")
-                   (smtpmail-smtp-auth-credentials nil)
-                   (smtpmail-starttls-credentials nil)
-                   (smtpmail-smtp-service  . 143)))
+                   (user-full-name         . "Luciano Diamand")))
+
          ,(make-mu4e-context
            :name "Fceia"
            :match-func (lambda (msg) (when msg
@@ -343,14 +331,9 @@
                                               ("/fceia/Trash" . ?t)))
                    (user-mail-address      . "ldiamand@fceia.unr.edu.ar")
                    (user-full-name         . "Luciano Diamand")))))
-                   ;;(smtpmail-smtp-user     . "ldiamand")
-                   ;;(smtpmail-smtp-server   . "smtp-doc.fceia.unr.edu.ar")
-                   ;;(smtpmail-smtp-auth-credentials nil)
-                   ;;(smtpmail-starttls-credentials nil)
-                   ;;(smtpmail-smtp-service  . 465)))))
 
 ;; General settings
-(setq mu4e-get-mail-command "mbsync gmail" ;; Use mbsync to fetch emails
+(setq mu4e-get-mail-command "mbsync -a" ;; Use mbsync to fetch emails
       mu4e-update-interval 300            ;; Update every 5 minutes
       mu4e-change-filenames-when-moving t ;; Avoid filename collisions
       mu4e-view-show-images t             ;; Show inline images
@@ -361,9 +344,11 @@
 
 ;; Set SMTP
 (require 'smtpmail)
-(setq send-mail-function 'smtpmail-send-it
-      message-send-mail-function 'smtpmail-send-it)
-(setq sendmail-program "msmtp")
+(setq send-mail-function 'sendmail-send-it
+      message-send-mail-function 'message-send-mail-with-sendmail
+      sendmail-program "msmtp"
+      message-sendmail-extra-arguments '("--read-envelope-from")
+      message-sendmail-f-is-evil t)
 
 ;; Languages ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
