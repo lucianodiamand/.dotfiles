@@ -56,6 +56,15 @@
 (require 'use-package)
 (setq use-package-always-ensure t)
 
+(defun efs/display-startup-time()
+  (message "Emacs loaded in %s with %d garbage collections"
+           (format "%.2f seconds"
+                   (float-time
+                   (time-subtract after-init-time before-init-time)))
+           gcs-done))
+
+(add-hook 'emacs-startup-hook #'efs/display-startup-time)
+
 ;; Solarized-theme
 (unless (package-installed-p 'solarized-theme)
   (package-install 'solarized-theme))
@@ -239,6 +248,122 @@
 (org-babel-do-load-languages
  'org-babel-load-languages
  '((shell . t)))
+
+(require 'auth-source)
+(setq auth-source '((:source "~/.authinfo")))
+
+;; mu4e ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Load mu4e
+(add-to-list 'load-path "/usr/share/emacs/site-lisp/mu4e")
+(require 'mu4e)
+
+;; Set up maildir locations
+(setq mu4e-maildir "~/.mail") ;; Root maildir location
+
+;; Define contexts for multiple accounts
+(setq mu4e-contexts
+      `( ,(make-mu4e-context
+           :name "Personal Gmail"
+           :match-func (lambda (msg) (when msg
+                                       (string-prefix-p "/personal-gmail" (mu4e-message-field msg :maildir))))
+           :vars '((mu4e-maildir-shortcuts . (("/personal-gmail/Inbox" . ?i)
+                                              ("/personal-gmail/Sent" . ?s)
+                                              ("/personal-gmail/Trash" . ?t)))
+                   (user-mail-address      . "lucianodiamand@gmail.com")
+                   (user-full-name         . "Luciano Diamand")
+                   (smtpmail-smtp-user     . "lucianodiamand@gmail.com")
+                   (smtpmail-smtp-server   . "smtp.gmail.com")
+                   (smtpmail-smtp-auth-credentials nil)
+                   (smtpmail-starttls-credentials nil)
+                   (smtpmail-smtp-service  . 587)))
+
+         ,(make-mu4e-context
+           :name "IPS Gmail"
+           :match-func (lambda (msg) (when msg
+                                       (string-prefix-p "/ips" (mu4e-message-field msg :maildir))))
+           :vars '((mu4e-maildir-shortcuts . (("/ips/Inbox" . ?i)
+                                              ("/ips/Sent" . ?s)
+                                              ("/ips/Trash" . ?t)))
+                   (user-mail-address      . "ldiamand@ips.edu.ar")
+                   (user-full-name         . "Luciano Diamand")
+                   (smtpmail-smtp-user     . "ldiamand@ips.edu.ar")
+                   (smtpmail-smtp-server   . "smtp.gmail.com")
+                   (smtpmail-smtp-auth-credentials nil)
+                   (smtpmail-starttls-credentials nil)
+                   (smtpmail-smtp-service  . 587)))
+
+         ,(make-mu4e-context
+           :name "TheLabTech Gmail"
+           :match-func (lambda (msg) (when msg
+                                       (string-prefix-p "/thelabtech" (mu4e-message-field msg :maildir))))
+           :vars '((mu4e-maildir-shortcuts . (("/thelabtech/Inbox" . ?i)
+                                              ("/thelabtech/Sent" . ?s)
+                                              ("/thelabtech/Trash" . ?t)))
+                   (user-mail-address      . "luciano.diamand@thelabtech.com.ar")
+                   (user-full-name         . "Luciano Diamand")
+                   (smtpmail-smtp-user     . "luciano.diamand@thelabtech.com.ar")
+                   (smtpmail-smtp-server   . "smtp.gmail.com")
+                   (smtpmail-smtp-auth-credentials nil)
+                   (smtpmail-starttls-credentials nil)
+                   (smtpmail-smtp-service  . 587)))
+        ,(make-mu4e-context
+           :name "Yahoo"
+           :match-func (lambda (msg) (when msg
+                                       (string-prefix-p "/yahoo" (mu4e-message-field msg :maildir))))
+           :vars '((mu4e-maildir-shortcuts . (("/yahoo/Inbox" . ?i)
+                                              ("/yahoo/Sent" . ?s)
+                                              ("/yahoo/Trash" . ?t)))
+                   (user-mail-address      . "lucianodiamand@yahoo.com")
+                   (user-full-name         . "Luciano Diamand")
+                   (smtpmail-smtp-user     . "lucianodiamand@yahoo.com")
+                   (smtpmail-smtp-server   . "smtp.yahoo.com")
+                   (smtpmail-smtp-auth-credentials nil)
+                   (smtpmail-starttls-credentials nil)
+                   (smtpmail-smtp-service  . 465)))
+         ,(make-mu4e-context
+           :name "UTN"
+           :match-func (lambda (msg) (when msg
+                                       (string-prefix-p "/frro" (mu4e-message-field msg :maildir))))
+           :vars '((mu4e-maildir-shortcuts . (("/frro/Inbox" . ?i)
+                                              ("/frro/Sent" . ?s)
+                                              ("/frro/Trash" . ?t)))
+                   (user-mail-address      . "ldiamand@frro.utn.edu.ar")
+                   (user-full-name         . "Luciano Diamand")
+                   (smtpmail-smtp-user     . "ldiamand")
+                   (smtpmail-smtp-server   . "mail.frro.utn.edu.ar")
+                   (smtpmail-smtp-auth-credentials nil)
+                   (smtpmail-starttls-credentials nil)
+                   (smtpmail-smtp-service  . 143)))
+         ,(make-mu4e-context
+           :name "Fceia"
+           :match-func (lambda (msg) (when msg
+                                       (string-prefix-p "/fceia" (mu4e-message-field msg :maildir))))
+           :vars '((mu4e-maildir-shortcuts . (("/fceia/Inbox" . ?i)
+                                              ("/fceia/Sent" . ?s)
+                                              ("/fceia/Trash" . ?t)))
+                   (user-mail-address      . "ldiamand@fceia.unr.edu.ar")
+                   (user-full-name         . "Luciano Diamand")))))
+                   ;;(smtpmail-smtp-user     . "ldiamand")
+                   ;;(smtpmail-smtp-server   . "smtp-doc.fceia.unr.edu.ar")
+                   ;;(smtpmail-smtp-auth-credentials nil)
+                   ;;(smtpmail-starttls-credentials nil)
+                   ;;(smtpmail-smtp-service  . 465)))))
+
+;; General settings
+(setq mu4e-get-mail-command "mbsync gmail" ;; Use mbsync to fetch emails
+      mu4e-update-interval 300            ;; Update every 5 minutes
+      mu4e-change-filenames-when-moving t ;; Avoid filename collisions
+      mu4e-view-show-images t             ;; Show inline images
+      mu4e-view-prefer-html t             ;; Prefer HTML emails
+      mu4e-compose-signature-auto-include nil ;; No automatic signature
+      mu4e-context-policy 'pick-first     ;; Start with the first context
+      mu4e-compose-context-policy 'ask)  ;; Ask for context when composing
+
+;; Set SMTP
+(require 'smtpmail)
+(setq send-mail-function 'smtpmail-send-it
+      message-send-mail-function 'smtpmail-send-it)
+(setq sendmail-program "msmtp")
 
 ;; Languages ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
