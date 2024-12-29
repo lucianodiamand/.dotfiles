@@ -54,6 +54,7 @@
 ;; Load pertinent modules
 (require 'ldd-package)
 (require 'ldd-settings)
+(require 'ldd-mail)
 
 (require 'epg)
 (setq epg-pinentry-mode 'loopback)
@@ -281,104 +282,6 @@
 
 (require 'auth-source)
 (setq auth-source '((:source "~/.authinfo")))
-
-;; mu4e ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Load mu4e
-(add-to-list 'load-path "/usr/share/emacs/site-lisp/mu4e")
-(require 'mu4e)
-(require 'mu4e-org)
-
-;; Set up maildir locations
-(setq mu4e-maildir "~/.mail") ;; Root maildir location
-
-;;(setq mu4e-headers-visible-columns 4)
-
-;; Define contexts for multiple accounts
-(setq mu4e-contexts
-      `( ,(make-mu4e-context
-           :name "Personal Gmail"
-           :match-func (lambda (msg) (when msg
-                                       (string-prefix-p "/personal-gmail" (mu4e-message-field msg :maildir))))
-           :vars '((mu4e-maildir-shortcuts . (("/personal-gmail/Inbox" . ?i)
-                                              ("/personal-gmail/Sent" . ?s)
-                                              ("/personal-gmail/Trash" . ?t)))
-                   (user-mail-address      . "lucianodiamand@gmail.com")
-                   (user-full-name         . "Luciano Diamand")))
-
-         ,(make-mu4e-context
-           :name "IPS Gmail"
-           :match-func (lambda (msg) (when msg
-                                       (string-prefix-p "/ips" (mu4e-message-field msg :maildir))))
-           :vars '((mu4e-maildir-shortcuts . (("/ips/Inbox" . ?i)
-                                              ("/ips/Sent" . ?s)
-                                              ("/ips/Trash" . ?t)))
-                   (user-mail-address      . "ldiamand@ips.edu.ar")
-                   (user-full-name         . "Luciano Diamand")))
-
-         ,(make-mu4e-context
-           :name "TheLabTech Gmail"
-           :match-func (lambda (msg) (when msg
-                                       (string-prefix-p "/thelabtech" (mu4e-message-field msg :maildir))))
-           :vars '((mu4e-maildir-shortcuts . (("/thelabtech/Inbox" . ?i)
-                                              ("/thelabtech/Sent" . ?s)
-                                              ("/thelabtech/Trash" . ?t)))
-                   (user-mail-address      . "luciano.diamand@thelabtech.com.ar")
-                   (user-full-name         . "Luciano Diamand")))
-
-        ,(make-mu4e-context
-           :name "Yahoo"
-           :match-func (lambda (msg) (when msg
-                                       (string-prefix-p "/yahoo" (mu4e-message-field msg :maildir))))
-           :vars '((mu4e-maildir-shortcuts . (("/yahoo/Inbox" . ?i)
-                                              ("/yahoo/Sent" . ?s)
-                                              ("/yahoo/Trash" . ?t)))
-                   (user-mail-address      . "lucianodiamand@yahoo.com")
-                   (user-full-name         . "Luciano Diamand")))
-
-         ,(make-mu4e-context
-           :name "UTN"
-           :match-func (lambda (msg) (when msg
-                                       (string-prefix-p "/frro" (mu4e-message-field msg :maildir))))
-           :vars '((mu4e-maildir-shortcuts . (("/frro/Inbox" . ?i)
-                                              ("/frro/Sent" . ?s)
-                                              ("/frro/Trash" . ?t)))
-                   (user-mail-address      . "ldiamand@frro.utn.edu.ar")
-                   (user-full-name         . "Luciano Diamand")))
-
-         ,(make-mu4e-context
-           :name "Fceia"
-           :match-func (lambda (msg) (when msg
-                                       (string-prefix-p "/fceia" (mu4e-message-field msg :maildir))))
-           :vars '((mu4e-maildir-shortcuts . (("/fceia/Inbox" . ?i)
-                                              ("/fceia/Sent" . ?s)
-                                              ("/fceia/Trash" . ?t)))
-                   (user-mail-address      . "ldiamand@fceia.unr.edu.ar")
-                   (user-full-name         . "Luciano Diamand")))))
-
-;; General settings
-(setq mu4e-get-mail-command "mbsync -a" ;; Use mbsync to fetch emails
-      mu4e-update-interval 300            ;; Update every 5 minutes
-      mu4e-change-filenames-when-moving t ;; Avoid filename collisions
-      mu4e-view-show-images t             ;; Show inline images
-      mu4e-view-prefer-html t             ;; Prefer HTML emails
-      mu4e-compose-signature-auto-include nil ;; No automatic signature
-      mu4e-context-policy 'pick-first     ;; Start with the first context
-      mu4e-compose-context-policy 'ask)  ;; Ask for context when composing
-
-;; Set SMTP
-(require 'smtpmail)
-(setq send-mail-function 'sendmail-send-it
-      message-send-mail-function 'message-send-mail-with-sendmail
-      sendmail-program "msmtp"
-      message-sendmail-extra-arguments '("--read-envelope-from")
-      message-sendmail-f-is-evil t)
-
-(setq org-capture-templates
-      `(("m" "Email Workflow")
-        ("mf" "Follow Up" entry (file+olp "~/dev/org/mail.org" "Follow Up")
-         "* TODO %a")
-        ("mr" "Read Later" entry (file+olp "~/dev/org/mail.org" "Read Later")
-         "* TODO %a")))
 
 ;; Languages ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
