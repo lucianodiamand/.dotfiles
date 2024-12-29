@@ -6,8 +6,7 @@
 
 ;; Add MELPA repository
 (add-to-list 'package-archives
-             '(("melpa" . "https://melpa.org/packages/")
-               ("gnu" . "https://elpa.gnu.org/packages/")))
+             '("melpa" . "https://melpa.org/packages/"))
 
 (package-initialize)
 (unless package-archive-contents
