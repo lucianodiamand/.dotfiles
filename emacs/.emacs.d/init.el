@@ -66,6 +66,12 @@
 (require 'use-package)
 (setq use-package-always-ensure t)
 
+(require 'epg)
+(setq epg-pinentry-mode 'loopback)
+
+(setq backup-directory-alist `(("." . ,(expand-file-name ".tmp/backups/"
+                                                         user-emacs-directory))))
+
 (defun efs/display-startup-time()
   (message "Emacs loaded in %s with %d garbage collections"
            (format "%.2f seconds"
@@ -107,8 +113,33 @@
   :config
   (evil-commentary-mode))
 
+(use-package marginalia
+             :init
+             (marginalia-mode))
+
+(setq frame-title-format
+      '(""
+        "%b"
+        (:eval
+         (let ((project-name (projectile-project-name)))
+           (if (and project-name (not (string= project-name "-")))
+               (if (buffer-modified-p)
+                   (format " ◉ %s - Emacs" project-name)
+                 (format "  ●  %s - Emacs" project-name))
+             "")))))
+
 ;; org-mode ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (require 'org)
+
+(use-package org-bullets
+             :ensure t
+             :init (add-hook 'org-mode-hook 'org-bullets-mode))
+
+(use-package orgtbl-aggregate
+  :ensure t
+  :config
+  ;; No additional configuration is required; it works with Org tables
+  )
 
 ;; agenda ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (setq org-agenda-files (quote ("~/dev/org")))
@@ -266,9 +297,12 @@
 ;; Load mu4e
 (add-to-list 'load-path "/usr/share/emacs/site-lisp/mu4e")
 (require 'mu4e)
+(require 'mu4e-org)
 
 ;; Set up maildir locations
 (setq mu4e-maildir "~/.mail") ;; Root maildir location
+
+;;(setq mu4e-headers-visible-columns 4)
 
 ;; Define contexts for multiple accounts
 (setq mu4e-contexts
@@ -350,6 +384,13 @@
       message-sendmail-extra-arguments '("--read-envelope-from")
       message-sendmail-f-is-evil t)
 
+(setq org-capture-templates
+      `(("m" "Email Workflow")
+        ("mf" "Follow Up" entry (file+olp "~/dev/org/mail.org" "Follow Up")
+         "* TODO %a")
+        ("mr" "Read Later" entry (file+olp "~/dev/org/mail.org" "Read Later")
+         "* TODO %a")))
+
 ;; Languages ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;; Lua
@@ -422,8 +463,11 @@
   (yas-global-mode))
 (use-package hydra)
 (use-package company)
+
+;; which key ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (use-package which-key
   :config (which-key-mode))
+
 (use-package lsp-java
   :config
   (add-hook 'java-mode-hook 'lsp))

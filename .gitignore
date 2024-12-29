@@ -9,6 +9,11 @@ emacs/.emacs.d/.lsp-session-v1
 emacs/.emacs.d/tree-sitter
 emacs/.emacs.d/.chatgpt-shell.el
 emacs/.emacs.d/init.el~
+emacs/.emacs.d/.tmp/
+emacs/.emacs.d/bookmarks
+emacs/.emacs.d/eclipse.jdt.ls/
+emacs/.emacs.d/eshell/
+emacs/.emacs.d/network-security.data
 
 vimb/.config/vimb/closed
 vimb/.config/vimb/command
