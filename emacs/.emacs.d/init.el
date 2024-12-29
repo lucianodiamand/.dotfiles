@@ -54,6 +54,8 @@
 ;; Load pertinent modules
 (require 'ldd-package)
 (require 'ldd-settings)
+(require 'ldd-keys-evil)
+
 (require 'ldd-mail)
 
 (require 'epg)
@@ -77,31 +79,6 @@
 
 (load-theme 'solarized-dark t)
 
-;; evil ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(use-package evil
-  :ensure t
-  :init
-  (setq evil-want-integration t)
-  (setq evil-want-keybinding nil)
-  (setq evil-want-C-u-scroll t)
-  :config
-  (evil-mode	1))
-
-(use-package evil-collection
-  :after evil
-  :ensure t
-  :config
-  (evil-collection-init))
-
-(use-package evil-surround
-  :ensure t
-  :config
-  (global-evil-surround-mode 1))
-
-(use-package evil-commentary
-  :ensure t
-  :config
-  (evil-commentary-mode))
 
 (use-package marginalia
              :init
