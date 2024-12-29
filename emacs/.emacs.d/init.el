@@ -56,6 +56,7 @@
 (require 'ldd-settings)
 (require 'ldd-keys-evil)
 
+(require 'ldd-core)
 (require 'ldd-mail)
 
 (require 'epg)
@@ -72,12 +73,6 @@
            gcs-done))
 
 (add-hook 'emacs-startup-hook #'efs/display-startup-time)
-
-;; Solarized-theme
-(unless (package-installed-p 'solarized-theme)
-  (package-install 'solarized-theme))
-
-(load-theme 'solarized-dark t)
 
 
 (use-package marginalia
