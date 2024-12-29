@@ -53,6 +53,7 @@
 
 ;; Load pertinent modules
 (require 'ldd-package)
+(require 'ldd-settings)
 
 (require 'epg)
 (setq epg-pinentry-mode 'loopback)
