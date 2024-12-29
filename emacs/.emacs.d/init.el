@@ -1,5 +1,9 @@
 ;; Override some of the defaults
 ;; Disable start up logo
+
+;; Add configuration modules to load path
+(add-to-list 'load-path '"~/.emacs.d/modules")
+
 (setq inhibit-startup-message t
       inhibit-splash-screen t
       display-line-numbers-type 'relative)
@@ -47,24 +51,8 @@
 
 (set-face-attribute 'default nil :font "Hack Nerd Font Mono" :height 140)
 
-;; Initialize package sources
-(require 'package)
-
-;; Add MELPA repository
-(setq package-archives
-      '(("melpa" . "https://melpa.org/packages/")
-        ("gnu" . "https://elpa.gnu.org/packages/")))
-
-(package-initialize)
-(unless package-archive-contents
-  (package-refresh-contents))
-
-;; Initialize use-package on non-Linux platforms
-(unless (package-installed-p 'use-package)
-  (package-install 'use-package))
-
-(require 'use-package)
-(setq use-package-always-ensure t)
+;; Load pertinent modules
+(require 'ldd-package)
 
 (require 'epg)
 (setq epg-pinentry-mode 'loopback)
