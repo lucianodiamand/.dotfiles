@@ -57,6 +57,7 @@
 (require 'ldd-keys-evil)
 
 (require 'ldd-core)
+(require 'ldd-auth)
 (require 'ldd-mail)
 
 (require 'epg)
