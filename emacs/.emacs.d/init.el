@@ -59,9 +59,9 @@
 (require 'ldd-core)
 (require 'ldd-auth)
 (require 'ldd-mail)
+(require 'ldd-present)
 
 (require 'epg)
-(setq epg-pinentry-mode 'loopback)
 
 (setq backup-directory-alist `(("." . ,(expand-file-name ".tmp/backups/"
                                                          user-emacs-directory))))
@@ -162,47 +162,47 @@
              (setq gptel-retry-delay 5))
 
 ;; Install org-present if need
-(unless (package-installed-p 'org-present)
-  (package-install 'org-present))
+;;(unless (package-installed-p 'org-present)
+;;  (package-install 'org-present))
 
 ;; Install visual-fill-column
-(unless (package-installed-p 'visual-fill-column)
-  (package-install 'visual-fill-column))
+;;(unless (package-installed-p 'visual-fill-column)
+;;  (package-install 'visual-fill-column))
 
 ;; Configure fill width
-(setq visual-fill-column-width 110
-      visual-fill-column-center-text t)
+;;(setq visual-fill-column-width 110
+;;     visual-fill-column-center-text t)
 
-(defun ldd/org-present-start ()
-  ;; Tweak font sizes
-  (setq-local face-remapping-alist '((default (:height 1.5) variable-pitch)
-                                     (header-line (:height 4.0) variable-pitch)
-                                     (org-docment-title (:height 1.75) org-document-title)
-                                     (org-code (:height 1.55) org-code)
-                                     (org-verbatim (:height 1.55) org-verbatim)
-                                     (org-block (:height 1.25) org-block)
-                                     (org-block-begin-line (:height 0.7) org-block)))
-
-  ;; Set a blank header line string to create blank space at the top
-  (setq header-line-format " ")
-
-  ;; Center the presentation and wrap lines
-  (visual-fill-column-mode 1)
-  (visual-line-mode 1))
-
-(defun ldd/org-present-end ()
-  ;; Reset font customizations
-  (setq-local face-remapping-alist '((default variable-pitch default)))
-
-  (setq header-line-format nil)
-
-  ;; Stop centering the document
-  (visual-fill-column-mode 0)
-  (visual-line-mode 0))
-
-;; Register hooks with org-present
-(add-hook 'org-present-mode-hook 'ldd/org-present-start)
-(add-hook 'org-present-mode-quit-hook 'ldd/org-present-end)
+;;(defun ldd/org-present-start ()
+;;  ;; Tweak font sizes
+;;  (setq-local face-remapping-alist '((default (:height 1.5) variable-pitch)
+;;                                     (header-line (:height 4.0) variable-pitch)
+;;                                     (org-docment-title (:height 1.75) org-document-title)
+;;                                     (org-code (:height 1.55) org-code)
+;;                                     (org-verbatim (:height 1.55) org-verbatim)
+;;                                     (org-block (:height 1.25) org-block)
+;;                                     (org-block-begin-line (:height 0.7) org-block)))
+;;
+;;  ;; Set a blank header line string to create blank space at the top
+;;  (setq header-line-format " ")
+;;
+;;  ;; Center the presentation and wrap lines
+;;  (visual-fill-column-mode 1)
+;;  (visual-line-mode 1))
+;;
+;;(defun ldd/org-present-end ()
+;;  ;; Reset font customizations
+;;  (setq-local face-remapping-alist '((default variable-pitch default)))
+;;
+;;  (setq header-line-format nil)
+;;
+;;  ;; Stop centering the document
+;;  (visual-fill-column-mode 0)
+;;  (visual-line-mode 0))
+;;
+;;;; Register hooks with org-present
+;;(add-hook 'org-present-mode-hook 'ldd/org-present-start)
+;;(add-hook 'org-present-mode-quit-hook 'ldd/org-present-end)
 
 ;; Load org-faces to make sure we can set appropiate faces
 (require 'org-faces)
@@ -234,17 +234,17 @@
 (set-face-attribute 'org-meta-line nil :inherit '(font-lock-comment-face fixed-pitch))
 (set-face-attribute 'org-checkbox nil :inherit 'fixed-pitch)
 
-(defun ldd/org-present-prepare-slide (buffer-name heading)
-  ;; Show only top-level headlines
-  (org-overview)
-
-  ;; Unfold the current entry
-  (org-show-entry)
-
-  ;; Show only direct subheadings of the slide but don't expand them
-  (org-show-children))
-
-(add-hook 'org-present-after-navigate-functions 'ldd/org-present-prepare-slide)
+;;(defun ldd/org-present-prepare-slide (buffer-name heading)
+;;  ;; Show only top-level headlines
+;;  (org-overview)
+;;
+;;  ;; Unfold the current entry
+;;  (org-show-entry)
+;;
+;;  ;; Show only direct subheadings of the slide but don't expand them
+;;  (org-show-children))
+;;
+;;(add-hook 'org-present-after-navigate-functions 'ldd/org-present-prepare-slide)
 
 (use-package org)
 ;;(use-package command-log-mode)
@@ -347,15 +347,6 @@
   :config
   (helm-mode))
 (use-package lsp-treemacs)
-
-;; auth-source-pass ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; enable auth-source-pass
-(use-package auth-source-pass
-  :ensure t
-  :config
-  (auth-source-pass-enable))
-
-(setq auth-sources '(password-store))
 
 (custom-set-variables
  ;; custom-set-variables was added by Custom.
