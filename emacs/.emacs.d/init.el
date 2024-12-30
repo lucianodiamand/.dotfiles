@@ -60,6 +60,7 @@
 (require 'ldd-auth)
 (require 'ldd-mail)
 (require 'ldd-present)
+(require 'ldd-gpt)
 
 (require 'epg)
 
@@ -148,18 +149,6 @@
   :ensure t
   :init
   (vertico-mode))
-
-;; c3po.el ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(use-package gptel
-             :ensure t
-             :config
-             (setq auth-sources '("~/.authinfo"))
-             (setq gptel-api-key (auth-source-pick-first-password :host "api.openai.com"))
-             (setq gptel-model "gpt-3.5-turbo")
-             (setq qptel-max-tokens 1000)
-             (setq gptel-debug t)
-             (setq gptel-retry-on-error t)
-             (setq gptel-retry-delay 5))
 
 ;; Install org-present if need
 ;;(unless (package-installed-p 'org-present)
