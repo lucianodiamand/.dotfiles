@@ -3,7 +3,7 @@
 (use-package mu4e
   :ensure nil ; Installed via distro package manager
   ;;:defer 20 ; Wait until 20 seconds after startup
-  :defer t
+  ;;:defer t  ; Fixit no carga mu4e con esta opcion
   ;;:bind (("C-c m m" . mu4e)
   ;;       ("C-c m c" . 'mu4e-compose-new)
   ;;       ("C-c m i" . 'ldd/go-to-inbox)
