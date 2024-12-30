@@ -18,9 +18,12 @@
 ;;  :config
 ;;  (setq password-store-password-length 12))
 
-;;(use-package auth-source-pass
-;;  :config
-;;  (auth-source-pass-enable))
+(use-package auth-source-pass
+  ;;ensure t
+  :config
+  (auth-source-pass-enable))
+
+(setq auth-sources '(password-store))
 
 ;;; -- OAuth2 -----
 
