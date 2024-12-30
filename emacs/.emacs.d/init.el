@@ -57,6 +57,7 @@
 (require 'ldd-keys-evil)
 
 (require 'ldd-core)
+(require 'ldd-interface)
 (require 'ldd-auth)
 (require 'ldd-mail)
 (require 'ldd-present)
@@ -77,9 +78,9 @@
 (add-hook 'emacs-startup-hook #'efs/display-startup-time)
 
 
-(use-package marginalia
-             :init
-             (marginalia-mode))
+;;(use-package marginalia
+;;             :init
+;;             (marginalia-mode))
 
 (setq frame-title-format
       '(""
@@ -145,10 +146,10 @@
       org-gcal-fetch-file-alist '(("lucianodiamand@gmail.com" . "~/dev/org/personal-gmail.org")))
 
 ;; vertico ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(use-package vertico
-  :ensure t
-  :init
-  (vertico-mode))
+;;(use-package vertico
+;;  :ensure t
+;;  :init
+;;  (vertico-mode))
 
 ;; Install org-present if need
 ;;(unless (package-installed-p 'org-present)
@@ -273,30 +274,30 @@
 (use-package lsp-ui
   :hook (lsp-mode . lsp-ui-mode))
 
-(use-package corfu
-  :custom
-  (corfu-cycle t)
-  (corfu-auto t)
-  (corfu-auto-prefix 2)
-  (corfu-auto-delay 0)
-  (corfu-popupinfo-delay '(0.5 . 0.2))
-  (corfu-preview-current 'insert)
-  (corfu-preselect 'prompt)
-  (corfu-on-exact-match nil)
-  :bind (:map corfu-map
-              ("TAB"        . corfu-next)
-              ([tab]        . corfu-next)
-              ("S-TAB"      . corfu-previous)
-              ([backtab]    . corfu-previous)
-              ("S-<return>" . corfu-insert)
-              ("RET"        . corfu-insert))
-  :init
-  (global-corfu-mode)
-  (corfu-history-mode))
+;;(use-package corfu
+;;  :custom
+;;  (corfu-cycle t)
+;;  (corfu-auto t)
+;;  (corfu-auto-prefix 2)
+;;  (corfu-auto-delay 0)
+;;  (corfu-popupinfo-delay '(0.5 . 0.2))
+;;  (corfu-preview-current 'insert)
+;;  (corfu-preselect 'prompt)
+;;  (corfu-on-exact-match nil)
+;;  :bind (:map corfu-map
+;;              ("TAB"        . corfu-next)
+;;              ([tab]        . corfu-next)
+;;              ("S-TAB"      . corfu-previous)
+;;              ([backtab]    . corfu-previous)
+;;              ("S-<return>" . corfu-insert)
+;;              ("RET"        . corfu-insert))
+;;  :init
+;;  (global-corfu-mode)
+;;  (corfu-history-mode))
 
-(use-package nerd-icons-corfu
-  :after corfu
-  :init (add-to-list 'corfu-margin-formatters #'nerd-icons-corfu-formatter))
+;;(use-package nerd-icons-corfu
+;;  :after corfu
+;;  :init (add-to-list 'corfu-margin-formatters #'nerd-icons-corfu-formatter))
 
 (use-package flycheck
   :hook (lsp-mode . flycheck-mode)
@@ -315,7 +316,7 @@
 (use-package yasnippet
   :config
   (yas-global-mode))
-(use-package hydra)
+
 (use-package company)
 
 ;; which key ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
