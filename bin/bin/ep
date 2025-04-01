@@ -1,37 +1,61 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 CURL_FILE="${CURL_FILE:-curl.http}"
 RAW_MODE=false
+bat_cmd="bat"
 
-# Ver si se pasó --raw
-if [[ "$1" == "--raw" ]]; then
-  RAW_MODE=true
-  shift
+# Detectar bat o batcat
+if ! command -v bat &>/dev/null && command -v batcat &>/dev/null; then
+  bat_cmd="batcat"
 fi
 
 print_error() {
   echo -e "\033[1;31m❌ $1\033[0m"
 }
 
+get_credentials_source() {
+  section="$1"
+
+  pass_id=$(awk "/^### ${section}[[:space:]]+-/{flag=1; next} /^### /{flag=0} flag" "$CURL_FILE" |
+    grep '^# pass:' | sed 's/# pass:[[:space:]]*//')
+
+  if [[ -n "$pass_id" ]]; then
+    echo "$pass_id"
+    return
+  fi
+
+  url=$(awk "/^### ${section}[[:space:]]+-/{flag=1; next} /^### /{flag=0} flag" "$CURL_FILE" |
+    grep -Eo 'https?://[^ ]+')
+
+  if [[ -n "$url" ]]; then
+    host=$(echo "$url" | sed -E 's@https?://([^/]+).*@\1@')
+    [[ -n "$host" ]] && echo "api/$host" && return
+  fi
+
+  echo "api/usuario"
+}
+
 # Obtener token JWT usando pass
 get_jwt_token() {
-  local pass_id=$(get_credentials_source "auth-token")
+  pass_id=$(get_credentials_source "auth-token")
 
   if ! pass show "$pass_id" &>/dev/null; then
     print_error "No se encontró la entrada en pass: $pass_id"
     exit 1
   fi
 
-  local creds=$(pass "$pass_id")
-  local pass=$(echo "$creds" | sed -n '1p')
-  local user=$(echo "$creds" | sed -n '2p')
+  creds=$(pass "$pass_id")
+  pass=$(echo "$creds" | sed -n '1p')
+  user=$(echo "$creds" | sed -n '2p')
 
   if [[ -z "$user" || -z "$pass" ]]; then
-    print_error "La entrada '$pass_id' debe tener:\n  línea 1: contraseña\n  línea 2: usuario"
+    print_error "La entrada '$pass_id' debe tener:"
+    echo "  línea 1: contraseña"
+    echo "  línea 2: usuario"
     exit 1
   fi
 
-  local auth_cmd=$(awk '/^### auth-token[[:space:]]+-/{flag=1; next} /^### /{flag=0} flag' "$CURL_FILE" |
+  auth_cmd=$(awk '/^### auth-token[[:space:]]+-/{flag=1; next} /^### /{flag=0} flag' "$CURL_FILE" |
     sed "s/{{USER}}/$user/" | sed "s/{{PASS}}/$pass/")
 
   echo "$auth_cmd" | bash | jq -r '.token'
@@ -39,8 +63,13 @@ get_jwt_token() {
 
 # Ejecutar bloque curl
 ep_section() {
-  local section=$1
-  local block=$(awk "/^### ${section}[[:space:]]+-/{flag=1; next} /^### /{flag=0} flag" "$CURL_FILE")
+  section="$1"
+  block=$(awk "/^### ${section}[[:space:]]+-/{flag=1; next} /^### /{flag=0} flag" "$CURL_FILE")
+
+  if [[ -z "$block" ]]; then
+    print_error "El endpoint '$section' no está definido en $CURL_FILE"
+    exit 1
+  fi
 
   if grep -q "Authorization: Bearer {{TOKEN}}" <<<"$block"; then
     token=$(get_jwt_token)
@@ -53,23 +82,86 @@ ep_section() {
   if $RAW_MODE; then
     echo "$block" | bash
   else
-    echo "$block" |
-      bash 2>/dev/null |
-      jq 2>/dev/null |
-      batcat --paging=never -l json 2>/dev/null || true
+    response=$(mktemp)
+    errlog=$(mktemp)
+
+    # Ejecutar curl, capturar error, status y salida
+    status_code=$(echo "$block" | sed -E 's/\bcurl\b/curl -sS -w "%{http_code}"/' | bash 2>"$errlog" | tee "$response" | tail -c 3)
+    code=$?
+
+    if [[ $code -ne 0 || "$status_code" == "000" ]]; then
+
+      if [[ "$status_code" == "000" ]]; then
+        print_error "No se pudo conectar al servidor o la conexión fue rechazada."
+      fi
+      print_error "El comando curl falló (código $code)."
+      if [[ -s "$errlog" ]]; then
+        print_error "$(cat "$errlog")"
+      fi
+      rm -f "$response" "$errlog"
+      exit $code
+    fi
+
+    case "$status_code" in
+      401)
+        print_error "Error 401: No autorizado. ¿Token vencido o incorrecto?"
+        ;;
+      403)
+        print_error "Error 403: Acceso prohibido. El token no tiene permisos."
+        ;;
+    esac
+
+    body=$(head -c -3 "$response")
+    rm -f "$response" "$errlog"
+
+    if echo "$body" | grep -qE '^\s*[\{\[]'; then
+      echo "$body" | jq 2>/dev/null | $bat_cmd --paging=never -l json 2>/dev/null || echo "$body"
+    else
+      echo "$body"
+    fi
+  fi
+}
+
+test_endpoint() {
+  section="$1"
+  block=$(awk "/^### ${section}[[:space:]]+-/{flag=1; next} /^### /{flag=0} flag" "$CURL_FILE")
+
+  if [[ -z "$block" ]]; then
+    print_error "El endpoint '$section' no está definido en $CURL_FILE"
+    return 1
+  fi
+
+  if grep -q "Authorization: Bearer {{TOKEN}}" <<<"$block"; then
+    token=$(get_jwt_token)
+    block=$(echo "$block" | sed "s/{{TOKEN}}/$token/")
+  fi
+
+  block=$(echo "$block" | sed -E 's/\bcurl\b/curl -sS -o /dev/null -w "%{http_code}"/')
+  status_code=$(echo "$block" | bash 2>/dev/null)
+  label="[$section]"
+
+  if [[ "$status_code" =~ ^2 ]]; then
+    echo -e "\033[1;32m✅ $label $status_code\033[0m"
+  else
+    echo -e "\033[1;31m❌ $label $status_code\033[0m"
   fi
 }
 
 # Listar endpoints crudos
 list_raw() {
-  grep -E '^### [a-zA-Z0-9_-]+[[:space:]]+-' "$CURL_FILE" |
-    sed -E 's/^### ([a-zA-Z0-9_-]+)[[:space:]]+-[[:space:]]+(.*)$/\1::\2/'
+  grep -E '^### [a-zA-Z0-9_-]+[[:space:]]+-' "$CURL_FILE" | sed -E 's/^### ([a-zA-Z0-9_-]+)[[:space:]]+-[[:space:]]+(.*)$/\1::\2/'
 }
 
 # Menú interactivo con fzf
 list_fzf() {
   list_raw | awk -F "::" '{ printf "%-20s %s\n", $1, $2 }' | fzf --ansi --prompt="Seleccioná un endpoint: " | awk '{print $1}'
 }
+
+# Ver si se pasó --raw
+if [[ "$1" == "--raw" ]]; then
+  RAW_MODE=true
+  shift
+fi
 
 # Mostrar ayuda
 if [[ "$1" == "--help" ]]; then
@@ -80,6 +172,8 @@ if [[ "$1" == "--help" ]]; then
   echo "  --help        Mostrar esta ayuda"
   echo "  --list        Listar endpoints definidos"
   echo "  --generate    Crear plantilla básica de curl.http"
+  echo "  --test        Probar un endpoint (solo HTTP status)"
+  echo "  --test-all    Probar todos los endpoints"
   echo
   echo "Ejemplo de estructura curl.http:"
   cat <<EOF
@@ -130,6 +224,24 @@ if [[ "$1" == "--list" ]]; then
   echo "Archivo: $CURL_FILE"
   echo "Comandos disponibles:"
   list_raw | awk -F "::" '{ printf "  \033[36m%-20s\033[0m %s\n", $1, $2 }'
+  exit 0
+fi
+
+if [[ "$1" == "--test" ]]; then
+  shift
+  if [[ -z "$1" ]]; then
+    print_error "Debe indicar un nombre de endpoint: ep --test get-users"
+    exit 1
+  fi
+  test_endpoint "$1"
+  exit $?
+fi
+
+if [[ "$1" == "--test-all" ]]; then
+  echo "🔍 Ejecutando tests sobre todos los endpoints de $CURL_FILE..."
+  list_raw | awk -F "::" '{print $1}' | grep -v '^auth-token$' | while read -r endpoint; do
+    test_endpoint "$endpoint"
+  done
   exit 0
 fi
 
