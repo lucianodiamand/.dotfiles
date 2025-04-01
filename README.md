@@ -30,5 +30,5 @@ To install packer:
 # Install the dotfiles
 
 To install run:
-```stow i3 i3status nvim alacrity fish bin emacs jfortivpn rxvt```
+```stow i3 i3status nvim alacrity fish bin emacs jfortivpn rxvt bat```
 
