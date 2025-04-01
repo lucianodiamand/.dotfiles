@@ -1,0 +1,145 @@
+#!/bin/bash
+
+CURL_FILE="${CURL_FILE:-curl.http}"
+RAW_MODE=false
+
+# Ver si se pasó --raw
+if [[ "$1" == "--raw" ]]; then
+  RAW_MODE=true
+  shift
+fi
+
+print_error() {
+  echo -e "\033[1;31m❌ $1\033[0m"
+}
+
+# Obtener token JWT usando pass
+get_jwt_token() {
+  local pass_id=$(get_credentials_source "auth-token")
+
+  if ! pass show "$pass_id" &>/dev/null; then
+    print_error "No se encontró la entrada en pass: $pass_id"
+    exit 1
+  fi
+
+  local creds=$(pass "$pass_id")
+  local pass=$(echo "$creds" | sed -n '1p')
+  local user=$(echo "$creds" | sed -n '2p')
+
+  if [[ -z "$user" || -z "$pass" ]]; then
+    print_error "La entrada '$pass_id' debe tener:\n  línea 1: contraseña\n  línea 2: usuario"
+    exit 1
+  fi
+
+  local auth_cmd=$(awk '/^### auth-token[[:space:]]+-/{flag=1; next} /^### /{flag=0} flag' "$CURL_FILE" |
+    sed "s/{{USER}}/$user/" | sed "s/{{PASS}}/$pass/")
+
+  echo "$auth_cmd" | bash | jq -r '.token'
+}
+
+# Ejecutar bloque curl
+ep_section() {
+  local section=$1
+  local block=$(awk "/^### ${section}[[:space:]]+-/{flag=1; next} /^### /{flag=0} flag" "$CURL_FILE")
+
+  if grep -q "Authorization: Bearer {{TOKEN}}" <<<"$block"; then
+    token=$(get_jwt_token)
+    block=$(echo "$block" | sed "s/{{TOKEN}}/$token/")
+  fi
+
+  # Inyectar -sS si no está
+  block=$(echo "$block" | sed -E 's/\bcurl\b/curl -sS/')
+
+  if $RAW_MODE; then
+    echo "$block" | bash
+  else
+    echo "$block" |
+      bash 2>/dev/null |
+      jq 2>/dev/null |
+      batcat --paging=never -l json 2>/dev/null || true
+  fi
+}
+
+# Listar endpoints crudos
+list_raw() {
+  grep -E '^### [a-zA-Z0-9_-]+[[:space:]]+-' "$CURL_FILE" |
+    sed -E 's/^### ([a-zA-Z0-9_-]+)[[:space:]]+-[[:space:]]+(.*)$/\1::\2/'
+}
+
+# Menú interactivo con fzf
+list_fzf() {
+  list_raw | awk -F "::" '{ printf "%-20s %s\n", $1, $2 }' | fzf --ansi --prompt="Seleccioná un endpoint: " | awk '{print $1}'
+}
+
+# Mostrar ayuda
+if [[ "$1" == "--help" ]]; then
+  echo "Uso: ep [--raw] [nombre-endpoint]"
+  echo
+  echo "Opciones:"
+  echo "  --raw         Mostrar salida sin formatear"
+  echo "  --help        Mostrar esta ayuda"
+  echo "  --list        Listar endpoints definidos"
+  echo "  --generate    Crear plantilla básica de curl.http"
+  echo
+  echo "Ejemplo de estructura curl.http:"
+  cat <<EOF
+
+### auth-token - Obtener token JWT
+# pass: api/usuario
+curl -X POST http://localhost:3000/auth/login \\
+  -H "Content-Type: application/json" \\
+  -d '{"username": "{{USER}}", "password": "{{PASS}}"}'
+
+### get-users - Obtener todos los usuarios
+curl -X GET http://localhost:3000/users
+
+### get-profile - Perfil autenticado
+curl -X GET http://localhost:3000/profile \\
+  -H "Authorization: Bearer {{TOKEN}}"
+EOF
+  exit 0
+fi
+
+# Generar plantilla
+if [[ "$1" == "--generate" ]]; then
+  if [[ -f "$CURL_FILE" ]]; then
+    print_error "Ya existe el archivo '$CURL_FILE'. No se sobrescribirá."
+    exit 1
+  fi
+
+  cat <<EOF > "$CURL_FILE"
+### auth-token - Obtener token JWT
+# pass: api/usuario
+curl -X POST http://localhost:3000/auth/login \\
+  -H "Content-Type: application/json" \\
+  -d '{"username": "{{USER}}", "password": "{{PASS}}"}'
+
+### get-users - Obtener todos los usuarios
+curl -X GET http://localhost:3000/users
+
+### get-profile - Perfil autenticado
+curl -X GET http://localhost:3000/profile \\
+  -H "Authorization: Bearer {{TOKEN}}"
+EOF
+  echo "✅ Plantilla creada en $CURL_FILE"
+  exit 0
+fi
+
+# Mostrar lista
+if [[ "$1" == "--list" ]]; then
+  echo "Archivo: $CURL_FILE"
+  echo "Comandos disponibles:"
+  list_raw | awk -F "::" '{ printf "  \033[36m%-20s\033[0m %s\n", $1, $2 }'
+  exit 0
+fi
+
+# Menú interactivo si no se pasa nada
+if [[ -z "$1" ]]; then
+  selected=$(list_fzf)
+  [[ -n "$selected" ]] && ep_section "$selected"
+  exit 0
+fi
+
+# Ejecutar directamente
+ep_section "$1"
+
