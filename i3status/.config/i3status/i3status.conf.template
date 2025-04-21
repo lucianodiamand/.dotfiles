@@ -9,20 +9,20 @@ general {
 }
 
 #order += "ipv6"
-order += "wireless wlp2s0"
-order += "ethernet enp0s3"
+order += "wireless _WIFI_"
+order += "ethernet _ETH_"
 order += "battery 0"
 order += "disk /"
 order += "load"
 order += "memory"
 order += "tztime local"
 
-wireless wlp2s0 {
+wireless _WIFI_ {
         format_up = "%ip (%bitrate,%quality at %essid)"
         format_down = ""
 }
 
-ethernet enp0s3 {
+ethernet _ETH_ {
         format_up = "%ip (%speed)"
         format_down = ""
 }
