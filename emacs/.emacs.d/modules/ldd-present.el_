@@ -1,0 +1,133 @@
+;; -*- lexical-binding: t; -*-
+
+;; Install org-present if need                                                        
+;;(unless (package-installed-p 'org-present)                                          
+;;  (package-install 'org-present))
+
+(defun ldd/org-present-prepare-slide ()
+  (when (and logos-focus-mode
+             (derived-mode-p 'org-mode))
+  (org-overview)
+  (org-show-entry)
+  (org-show-children)))
+
+(defun dw/present-toggle ()
+  "Configures the buffer for a presentation."
+  (interactive)
+  (if logos-focus-mode
+      (progn
+        (setq-local face-remapping-alist nil)
+        (widen)
+        (logos-focus-mode 0))
+
+    (setq-local face-remapping-alist '((default (:height 1.5) default)
+                                       (org-document-title (:height 1.75) org-document-title)
+                                       (org-block-begin-line (:height 0.7) org-block)))
+
+    ;; Narrow the buffer and start focus mode
+    (logos-narrow-dwim)
+    (logos-focus-mode 1)
+
+    ;; Prepare the slide
+    (dw/present-prepare-slide)))
+
+(use-package logos
+  :bind (([remap narrow-to-region] . logos-narrow-dwim)
+	       ([remap forward-page] . logos-forward-page-dwim)
+         ([remap backward-page] . logos-backward-page-dwim))
+  :custom
+  (logos-outlines-are-pages t)
+  (logos-scroll-lock t)
+  :config
+  (setf (alist-get 'org-mode logos-outline-regexp-alist) "^\\*\\{1,2\\} +")
+  (add-hook 'logos-page-motion-hook #'dw/present-prepare-slide))
+
+;;(defun ldd/org-present-hook ()
+;;  (setq-local face-remapping-alist '((default (:height 1.5) default)
+;;                                     (header-line (:height 4.5) variable-pitch)
+;;                                     (org-document-title (:height 1.75) org-document-title)
+;;                                     ;; These were needed before the Wayland transition
+;;                                     ;; (org-code (:height 1.55) org-code)
+;;                                     ;; (org-verbatim (:height 1.55) org-verbatim)
+;;                                     ;; (org-block (:height 1.1) org-block)
+;;                                     (org-block-begin-line (:height 0.7) org-block)))
+;;  (setq header-line-format " ")
+;;  (org-appear-mode -1)
+;;  (org-display-inline-images)
+;;  (ldd/org-present-prepare-slide)
+;;  (when (fboundp 'ldd/kill-panel)
+;;    (ldd/kill-panel)))
+;;
+;;(defun ldd/org-present-quit-hook ()
+;;  (setq-local face-remapping-alist nil)
+;;  (setq header-line-format nil)
+;;  (org-present-small)
+;;  (org-remove-inline-images)
+;;  (org-appear-mode 1)
+;;  (when (fboundp 'ldd/start-panel)
+;;    (ldd/start-panel)))
+;;
+;;(defun ldd/org-present-prev ()
+;;  (interactive)
+;;  (org-present-prev)
+;;  (ldd/org-present-prepare-slide))
+;;
+;;(defun ldd/org-present-next ()
+;;  (interactive)
+;;  (org-present-next)
+;;  (ldd/org-present-prepare-slide)
+;;  (when (fboundp 'live-crafter-add-timestamp)
+;;    (live-crafter-add-timestamp (substring-no-properties (org-get-heading t t t t)))))
+;;
+;;(defun ldd/org-present-start ()
+;;  ;; Tweak font sizes
+;;  (setq-local face-remapping-alist '((default (:height 1.5) variable-pitch)
+;;                                     (header-line (:height 4.0) variable-pitch)
+;;                                     (org-docment-title (:height 1.75) org-document-title)
+;;                                     (org-code (:height 1.55) org-code)
+;;                                     (org-verbatim (:height 1.55) org-verbatim)
+;;                                     (org-block (:height 1.25) org-block)
+;;                                     (org-block-begin-line (:height 0.7) org-block)))
+;;
+;;  ;; Set a blank header line string to create blank space at the top
+;;  (setq header-line-format " ")
+;;
+;;  ;; Center the presentation and wrap lines
+;;  (visual-fill-column-mode 1)
+;;  (visual-line-mode 1)
+;;  ;; TODO its not working
+;;  (display-line-numbers-mode -1))
+;;
+;;(defun ldd/org-present-end ()
+;;  ;; Reset font customizations
+;;  (setq-local face-remapping-alist '((default variable-pitch default)))
+;;
+;;  (setq header-line-format nil)
+;;
+;;  ;; Stop centering the document
+;;  (visual-fill-column-mode 0)
+;;  (visual-line-mode 0))
+;;
+;;;; Register hooks with org-present
+;;(add-hook 'org-present-mode-hook 'ldd/org-present-start)
+;;(add-hook 'org-present-mode-quit-hook 'ldd/org-present-end)
+;;
+;;(use-package org-present
+;;  :commands org-present
+;;  :hook ((org-present-mode . ldd/org-present-hook)
+;;         (org-present-mode-quit . ldd/org-present-quit-hook))
+;;  :bind (:map org-present-mode-keymap
+;;              ("C-c C-j" . ldd/org-present-next)
+;;              ("C-c C-k" . ldd/org-present-prev)))
+;;
+;;(defun ldd/org-present-prepare-slide (buffer-name heading)
+;;  ;; Show only top-level headlines
+;;  (org-overview)
+;;
+;;  ;; Unfold the current entry
+;;  (org-show-entry)
+;;
+;;  ;; Show only direct subheadings of the slide but don't expand them
+;;  (org-show-children))
+
+(provide 'ldd-present)

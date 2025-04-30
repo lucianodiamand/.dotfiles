@@ -6,6 +6,9 @@
   (org-show-children))
 
 (defun ldd/org-present-hook ()
+  ;; Desactivamos numeros de linea
+  (display-line-numbers-mode -1)
+
   (setq-local face-remapping-alist '((default (:height 1.5) default)
                                      (header-line (:height 4.5) variable-pitch)
                                      (org-document-title (:height 1.75) org-document-title)
@@ -22,6 +25,9 @@
     (ldd/kill-panel)))
 
 (defun ldd/org-present-quit-hook ()
+  ;; Reactivamos numeros de linea
+  (display-line-numbers-mode t)
+
   (setq-local face-remapping-alist nil)
   (setq header-line-format nil)
   (org-present-small)
