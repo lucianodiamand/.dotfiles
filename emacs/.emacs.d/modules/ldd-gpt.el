@@ -9,6 +9,7 @@
              (setq qptel-max-tokens 1000)
              (setq gptel-debug t)
              (setq gptel-retry-on-error t)
+             (setq gptel-default-mode 'org-mode)
              (setq gptel-retry-delay 5))
 
 (provide 'ldd-gpt)

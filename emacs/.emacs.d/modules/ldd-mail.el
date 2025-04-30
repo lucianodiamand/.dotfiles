@@ -18,6 +18,17 @@
   ;;(setq mu4e-update-interval (* 10 60))
   (setq mu4e-get-mail-command "mbsync -a")
   (setq mu4e-maildir "~/.mail")
+  (setq mu4e-date-format-long "%d/%m/%Y")
+  (setq mu4e-headers-date-format "%d/%m/%Y")
+
+  ;;(setq mu4e-headers-fields
+  ;;      '((:human-date    .  12)   ;; Fecha: dd/mm/yyyy
+  ;;        (:flags         .   6)   ;; Marcas (leido, archivado, etc.)
+  ;;        (:from          .  25)   ;; Remitente
+  ;;        (:subject       .  60)   ;; Asunto
+  ;;        (:maildir       .  20))) ;; Carpeta (opcional)
+
+  ;;(setq mu4e-headers-visible-columns 80)
 
   ;; Use Ivy for mu4e completions (maildir folders, etc)
   (setq mu4e-completing-read-function #'completing-read)
@@ -139,6 +150,11 @@
          "* TODO %a")
         ("mr" "Read Later" entry (file+olp "~/dev/org/mail.org" "Read Later")
          "* TODO %a")))
+
+  ;;(add-hook 'mu4e-headers-mode-hook
+  ;;          (lambda ()
+  ;;            (setq buffer-face-mode-face '(:family "Monospacce"))
+  ;;            (buffer-face-mode)))
 
   ;; Use mu4e for sending e-mail
   ;;(setq mail-user-agent 'mu4e-user-agent

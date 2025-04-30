@@ -58,10 +58,12 @@
 
 (require 'ldd-core)
 (require 'ldd-interface)
+(require 'ldd-writing)
 (require 'ldd-auth)
-(require 'ldd-mail)
 (require 'ldd-present)
 (require 'ldd-gpt)
+
+(require 'ldd-mail)
 
 (require 'epg)
 
@@ -151,10 +153,6 @@
 ;;  :init
 ;;  (vertico-mode))
 
-;; Install org-present if need
-;;(unless (package-installed-p 'org-present)
-;;  (package-install 'org-present))
-
 ;; Install visual-fill-column
 ;;(unless (package-installed-p 'visual-fill-column)
 ;;  (package-install 'visual-fill-column))
@@ -162,37 +160,6 @@
 ;; Configure fill width
 ;;(setq visual-fill-column-width 110
 ;;     visual-fill-column-center-text t)
-
-;;(defun ldd/org-present-start ()
-;;  ;; Tweak font sizes
-;;  (setq-local face-remapping-alist '((default (:height 1.5) variable-pitch)
-;;                                     (header-line (:height 4.0) variable-pitch)
-;;                                     (org-docment-title (:height 1.75) org-document-title)
-;;                                     (org-code (:height 1.55) org-code)
-;;                                     (org-verbatim (:height 1.55) org-verbatim)
-;;                                     (org-block (:height 1.25) org-block)
-;;                                     (org-block-begin-line (:height 0.7) org-block)))
-;;
-;;  ;; Set a blank header line string to create blank space at the top
-;;  (setq header-line-format " ")
-;;
-;;  ;; Center the presentation and wrap lines
-;;  (visual-fill-column-mode 1)
-;;  (visual-line-mode 1))
-;;
-;;(defun ldd/org-present-end ()
-;;  ;; Reset font customizations
-;;  (setq-local face-remapping-alist '((default variable-pitch default)))
-;;
-;;  (setq header-line-format nil)
-;;
-;;  ;; Stop centering the document
-;;  (visual-fill-column-mode 0)
-;;  (visual-line-mode 0))
-;;
-;;;; Register hooks with org-present
-;;(add-hook 'org-present-mode-hook 'ldd/org-present-start)
-;;(add-hook 'org-present-mode-quit-hook 'ldd/org-present-end)
 
 ;; Load org-faces to make sure we can set appropiate faces
 (require 'org-faces)
@@ -224,16 +191,6 @@
 (set-face-attribute 'org-meta-line nil :inherit '(font-lock-comment-face fixed-pitch))
 (set-face-attribute 'org-checkbox nil :inherit 'fixed-pitch)
 
-;;(defun ldd/org-present-prepare-slide (buffer-name heading)
-;;  ;; Show only top-level headlines
-;;  (org-overview)
-;;
-;;  ;; Unfold the current entry
-;;  (org-show-entry)
-;;
-;;  ;; Show only direct subheadings of the slide but don't expand them
-;;  (org-show-children))
-;;
 ;;(add-hook 'org-present-after-navigate-functions 'ldd/org-present-prepare-slide)
 
 (use-package org)
