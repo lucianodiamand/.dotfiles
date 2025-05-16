@@ -216,6 +216,41 @@ EOF
   exit 0
 fi
 
+if [[ "$1" == "--print" ]]; then
+  shift
+  if [[ -z "$1" ]]; then
+    print_error "Debe indicar un nombre de endpoint: ep --print get-profile"
+    exit 1
+  fi
+
+  section="$1"
+  raw_block=$(get_block "$section")
+
+  # Detectar si requiere TOKEN antes del envsubst
+  if echo "$raw_block" | grep -q '\$TOKEN'; then
+    get_jwt_token
+  fi
+
+  # Detectar si requiere PASS/USER antes del envsubst
+  if echo "$raw_block" | grep -q '\$PASS'; then
+    pass_id=$(get_credentials_source "auth-token")
+    creds=$(command pass show "$pass_id")
+    PASS=$(echo "$creds" | sed -n '1p')
+    USER=$(echo "$creds" | sed -n '2p')
+    export USER PASS
+  fi
+
+  block=$(envsubst <<< "$raw_block")
+
+  # Enmascarar solo la contraseña
+  if [[ -n "$PASS" ]]; then
+    block="${block//$PASS/********}"
+  fi
+
+  echo "$block"
+  exit 0
+fi
+
 # Generar plantilla
 if [[ "$1" == "--generate" ]]; then
   if [[ -f "$CURL_FILE" ]]; then
