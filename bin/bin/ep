@@ -377,6 +377,75 @@ EOF
   exit 0
 fi
 
+if [[ "$1" == "--add" ]]; then
+  shift
+  if [[ $# -lt 2 ]]; then
+    print_error "Uso: ep --add nombre-endpoint \"Descripción del endpoint\""
+    exit 1
+  fi
+
+  name="$1"
+  desc="$2"
+
+  if grep -q "^### $name " "$CURL_FILE"; then
+    print_error "Ya existe un endpoint con el nombre '$name' en $CURL_FILE"
+    exit 1
+  fi
+
+  tmpfile=$(mktemp /tmp/ep-add.XXXXXX)
+
+  echo "📝 Pegá el bloque curl en el editor. Guardá y cerrá para agregarlo a $CURL_FILE."
+  editor="${EDITOR:-vi}"
+  "$editor" "$tmpfile"
+
+  if [[ ! -s "$tmpfile" ]]; then
+    print_error "No se agregó ningún contenido. Operación cancelada."
+    rm -f "$tmpfile"
+    exit 1
+  fi
+
+  # Leer contenido
+  raw=$(<"$tmpfile")
+  rm -f "$tmpfile"
+
+  # Quitar posible curl duplicado (dejar solo los args)
+  raw=$(echo "$raw" | sed -E 's/^curl[[:space:]]+//')
+
+  # Reemplazar token hardcodeado por $TOKEN
+  raw=$(echo "$raw" | sed -E 's/(Authorization:\s*Bearer)[[:space:]]+[a-zA-Z0-9._-]+/\1 \$TOKEN/')
+
+  # Paso 1: dividir argumentos largos (especialmente -H) en líneas individuales
+  normalized=$(echo "$raw" | sed 's/ -H /\'$'\n-H /g')
+
+  # Paso 2: filtrar solo headers válidos
+  filtered=$(echo "$normalized" | awk '
+    /^-H / {
+      if ($0 ~ /Authorization:/ ||
+          $0 ~ /Content-Type:/)
+        print;
+      next;
+    }
+    { print }
+  ')
+
+  # Paso 3: rearmar con formato tipo script (barra \ al final, salvo última línea)
+  formatted=$(echo "$filtered" | awk '
+    NR == 1 { print "curl " $0; next }
+    { print "  " $0 }
+  ' | sed '$!s/$/ \\/')
+
+  content="$formatted"
+
+  {
+    echo
+    echo "### $name - $desc"
+    echo "$content"
+  } >> "$CURL_FILE"
+
+  echo "✅ Endpoint '$name' agregado limpiamente a $CURL_FILE"
+  exit 0
+fi
+
 # Generar plantilla
 if [[ "$1" == "--generate" ]]; then
   if [[ -f "$CURL_FILE" ]]; then
