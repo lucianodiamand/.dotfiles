@@ -251,6 +251,46 @@ if [[ "$1" == "--print" ]]; then
   exit 0
 fi
 
+if [[ "$1" == "--copy" ]]; then
+  shift
+  if [[ -z "$1" ]]; then
+    print_error "Debe indicar un nombre de endpoint: ep --copy get-profile"
+    exit 1
+  fi
+
+  section="$1"
+  raw_block=$(get_block "$section")
+
+  if echo "$raw_block" | grep -q '\$TOKEN'; then
+    get_jwt_token
+  fi
+
+  if echo "$raw_block" | grep -q '\$PASS'; then
+    pass_id=$(get_credentials_source "auth-token")
+    creds=$(command pass show "$pass_id")
+    PASS=$(echo "$creds" | sed -n '1p')
+    USER=$(echo "$creds" | sed -n '2p')
+    export USER PASS
+  fi
+
+  block=$(envsubst <<< "$raw_block")
+
+  if [[ -n "$PASS" ]]; then
+    block="${block//$PASS/********}"
+  fi
+
+  if command -v xclip &>/dev/null; then
+    echo "$block" | xclip -selection clipboard
+    echo "✅ Copiado al portapapeles con xclip"
+  elif command -v pbcopy &>/dev/null; then
+    echo "$block" | pbcopy
+    echo "✅ Copiado al portapapeles con pbcopy"
+  else
+    print_error "No se encontró xclip ni pbcopy para copiar al portapapeles"
+    echo "$block"
+  fi
+  exit 0
+fi
 # Generar plantilla
 if [[ "$1" == "--generate" ]]; then
   if [[ -f "$CURL_FILE" ]]; then
