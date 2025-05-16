@@ -291,6 +291,29 @@ if [[ "$1" == "--copy" ]]; then
   fi
   exit 0
 fi
+
+if [[ "$1" == "--show" ]]; then
+  shift
+  if [[ -z "$1" ]]; then
+    print_error "Debe indicar un nombre de endpoint: ep --show get-profile"
+    exit 1
+  fi
+
+  echo -e "\033[1;33m⚠️  ATENCIÓN: Este comando mostrará la contraseña en texto plano.\033[0m"
+  read -rp "¿Continuar? [s/N] " resp
+  [[ "$resp" != "s" && "$resp" != "S" ]] && {
+    echo "❌ Cancelado."
+    exit 1
+  }
+
+  section="$1"
+  block=$(get_block "$section")
+  block=$(envsubst <<< "$block")
+
+  echo "$block"
+  exit 0
+fi
+
 # Generar plantilla
 if [[ "$1" == "--generate" ]]; then
   if [[ -f "$CURL_FILE" ]]; then
