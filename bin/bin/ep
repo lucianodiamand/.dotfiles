@@ -18,33 +18,19 @@ get_credentials_source() {
 
   pass_id=$(awk "/^### ${section}[[:space:]]+-/{flag=1; next} /^### /{flag=0} flag" "$CURL_FILE" |
     grep '^# pass:' | sed 's/# pass:[[:space:]]*//')
-
-  if [[ -n "$pass_id" ]]; then
-    echo "$pass_id"
-    return
-  fi
-
-  url=$(awk "/^### ${section}[[:space:]]+-/{flag=1; next} /^### /{flag=0} flag" "$CURL_FILE" |
-    grep -Eo 'https?://[^ ]+')
-
-  if [[ -n "$url" ]]; then
-    host=$(echo "$url" | sed -E 's@https?://([^/]+).*@\1@')
-    [[ -n "$host" ]] && echo "api/$host" && return
-  fi
-
-  echo "api/usuario"
+  echo "${pass_id:-api/usuario}"
 }
 
 # Obtener token JWT usando pass
 get_jwt_token() {
   pass_id=$(get_credentials_source "auth-token")
 
-  if ! pass show "$pass_id" &>/dev/null; then
+  if ! command pass show "$pass_id" &>/dev/null; then
     print_error "No se encontró la entrada en pass: $pass_id"
     exit 1
   fi
 
-  creds=$(pass "$pass_id")
+  creds=$(command pass show "$pass_id")
   pass=$(echo "$creds" | sed -n '1p')
   user=$(echo "$creds" | sed -n '2p')
 
@@ -55,10 +41,24 @@ get_jwt_token() {
     exit 1
   fi
 
-  auth_cmd=$(awk '/^### auth-token[[:space:]]+-/{flag=1; next} /^### /{flag=0} flag' "$CURL_FILE" |
-    sed "s/{{USER}}/$user/" | sed "s/{{PASS}}/$pass/")
+  export USER="$user"
+  export PASS="$pass"
 
-  echo "$auth_cmd" | bash | jq -r '.token'
+  >&2 echo "🔧 Ejecutando login con usuario $USER"
+
+  result=$(curl -sS -X POST http://localhost:3000/api/auth/login \
+    -H "Content-Type: application/json" \
+    -d "{\"username\": \"$USER\", \"password\": \"$PASS\"}")
+
+  token=$(echo "$result" | jq -r '.access_token')
+
+  if [[ "$token" == "null" || -z "$token" ]]; then
+    print_error "No se pudo obtener un token válido"
+    echo "$result"
+    exit 1
+  fi
+
+  echo "$token"
 }
 
 # Ejecutar bloque curl
@@ -71,10 +71,16 @@ ep_section() {
     exit 1
   fi
 
-  if grep -q "Authorization: Bearer {{TOKEN}}" <<<"$block"; then
+  if [[ "$section" == "auth-token" ]]; then
+    echo "🔑 Ejecutando get_jwt_token() para auth-token"
+    get_jwt_token
+  elif echo "$block" | grep -q 'Authorization: Bearer.*TOKEN'; then
+    echo "🔑 Ejecutando get_jwt_token() para endpoint protegido"
     token=$(get_jwt_token)
-    block=$(echo "$block" | sed "s/{{TOKEN}}/$token/")
+    export TOKEN="$token"
   fi
+
+  block=$(envsubst <<< "$block")
 
   # Inyectar -sS si no está
   block=$(echo "$block" | sed -E 's/\bcurl\b/curl -sS/')
@@ -86,6 +92,7 @@ ep_section() {
     errlog=$(mktemp)
 
     # Ejecutar curl, capturar error, status y salida
+    echo "$block"
     status_code=$(echo "$block" | sed -E 's/\bcurl\b/curl -sS -w "%{http_code}"/' | bash 2>"$errlog" | tee "$response" | tail -c 3)
     code=$?
 
@@ -131,11 +138,12 @@ test_endpoint() {
     return 1
   fi
 
-  if grep -q "Authorization: Bearer {{TOKEN}}" <<<"$block"; then
+  if echo "$block" | grep -q 'Authorization: Bearer \$TOKEN'; then
     token=$(get_jwt_token)
-    block=$(echo "$block" | sed "s/{{TOKEN}}/$token/")
+    export TOKEN="$token"
   fi
 
+  block=$(envsubst <<< "$block")
   block=$(echo "$block" | sed -E 's/\bcurl\b/curl -sS -o /dev/null -w "%{http_code}"/')
   status_code=$(echo "$block" | bash 2>/dev/null)
   label="[$section]"
@@ -157,7 +165,7 @@ list_fzf() {
   list_raw | awk -F "::" '{ printf "%-20s %s\n", $1, $2 }' | fzf --ansi --prompt="Seleccioná un endpoint: " | awk '{print $1}'
 }
 
-# Ver si se pasó --raw
+# Flags
 if [[ "$1" == "--raw" ]]; then
   RAW_MODE=true
   shift
@@ -182,14 +190,14 @@ if [[ "$1" == "--help" ]]; then
 # pass: api/usuario
 curl -X POST http://localhost:3000/auth/login \\
   -H "Content-Type: application/json" \\
-  -d '{"username": "{{USER}}", "password": "{{PASS}}"}'
+  -d "{\"username\": \"$USER\", \"password\": \"$PASS\"}"
 
 ### get-users - Obtener todos los usuarios
 curl -X GET http://localhost:3000/users
 
 ### get-profile - Perfil autenticado
 curl -X GET http://localhost:3000/profile \\
-  -H "Authorization: Bearer {{TOKEN}}"
+  -H "Authorization: Bearer $TOKEN"
 EOF
   exit 0
 fi
@@ -219,7 +227,6 @@ EOF
   exit 0
 fi
 
-# Mostrar lista
 if [[ "$1" == "--list" ]]; then
   echo "Archivo: $CURL_FILE"
   echo "Comandos disponibles:"
