@@ -72,10 +72,8 @@ ep_section() {
   fi
 
   if [[ "$section" == "auth-token" ]]; then
-    echo "🔑 Ejecutando get_jwt_token() para auth-token"
     get_jwt_token
   elif echo "$block" | grep -q 'Authorization: Bearer.*TOKEN'; then
-    echo "🔑 Ejecutando get_jwt_token() para endpoint protegido"
     token=$(get_jwt_token)
     export TOKEN="$token"
   fi
@@ -92,7 +90,13 @@ ep_section() {
     errlog=$(mktemp)
 
     # Ejecutar curl, capturar error, status y salida
-    echo "$block"
+    if [[ "$section" == "auth-token" && -n "$PASS" ]]; then
+      block_masked="${block//$PASS/********}"
+      echo "$block_masked"
+    else
+      echo "$block"
+    fi
+
     status_code=$(echo "$block" | sed -E 's/\bcurl\b/curl -sS -w "%{http_code}"/' | bash 2>"$errlog" | tee "$response" | tail -c 3)
     code=$?
 
