@@ -13,6 +13,11 @@ print_error() {
   echo -e "\033[1;31m❌ $1\033[0m"
 }
 
+get_block() {
+  local section="$1"
+  awk "/^### ${section}[[:space:]]+-/{flag=1; next} /^### /{flag=0} flag" "$CURL_FILE"
+}
+
 get_credentials_source() {
   section="$1"
 
@@ -46,9 +51,16 @@ get_jwt_token() {
 
   >&2 echo "🔧 Ejecutando login con usuario $USER"
 
-  result=$(curl -sS -X POST http://localhost:3000/api/auth/login \
-    -H "Content-Type: application/json" \
-    -d "{\"username\": \"$USER\", \"password\": \"$PASS\"}")
+  # Leer el bloque auth-token desde el archivo
+  auth_block=$(get_block "auth-token")
+  auth_block=$(envsubst <<< "$auth_block")
+
+  # Ejecutar el bloque curl y capturar resultado asegurando -sS
+  if ! echo "$auth_block" | grep -q -- '-sS'; then
+    auth_block=$(echo "$auth_block" | sed -E 's/\bcurl\b/curl -sS/')
+  fi
+
+  result=$(bash <<< "$auth_block")
 
   token=$(echo "$result" | jq -r '.access_token')
 
@@ -58,30 +70,29 @@ get_jwt_token() {
     exit 1
   fi
 
-  echo "$token"
+  export TOKEN="$token"
 }
 
 # Ejecutar bloque curl
 ep_section() {
   section="$1"
-  block=$(awk "/^### ${section}[[:space:]]+-/{flag=1; next} /^### /{flag=0} flag" "$CURL_FILE")
+  block=$(get_block "$section")
 
   if [[ -z "$block" ]]; then
     print_error "El endpoint '$section' no está definido en $CURL_FILE"
     exit 1
   fi
 
-  if [[ "$section" == "auth-token" ]]; then
+  if [[ "$section" == "auth-token" ]] || echo "$block" | grep -q 'Authorization: Bearer.*\$TOKEN'; then
     get_jwt_token
-  elif echo "$block" | grep -q 'Authorization: Bearer.*TOKEN'; then
-    token=$(get_jwt_token)
-    export TOKEN="$token"
   fi
 
   block=$(envsubst <<< "$block")
 
   # Inyectar -sS si no está
-  block=$(echo "$block" | sed -E 's/\bcurl\b/curl -sS/')
+  if ! echo "$block" | grep -qE 'curl[^\\]*-sS'; then
+    block=$(echo "$block" | sed -E 's/\bcurl\b/curl -sS/')
+  fi
 
   if $RAW_MODE; then
     echo "$block" | bash
@@ -135,7 +146,7 @@ ep_section() {
 
 test_endpoint() {
   section="$1"
-  block=$(awk "/^### ${section}[[:space:]]+-/{flag=1; next} /^### /{flag=0} flag" "$CURL_FILE")
+  block=$(get_block "$section")
 
   if [[ -z "$block" ]]; then
     print_error "El endpoint '$section' no está definido en $CURL_FILE"
@@ -143,8 +154,7 @@ test_endpoint() {
   fi
 
   if echo "$block" | grep -q 'Authorization: Bearer \$TOKEN'; then
-    token=$(get_jwt_token)
-    export TOKEN="$token"
+    get_jwt_token
   fi
 
   block=$(envsubst <<< "$block")
