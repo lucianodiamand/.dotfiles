@@ -314,6 +314,69 @@ if [[ "$1" == "--show" ]]; then
   exit 0
 fi
 
+if [[ "$1" == "--export" ]]; then
+  shift
+  if [[ -z "$1" ]]; then
+    print_error "Debe indicar un nombre de endpoint: ep --export get-profile"
+    exit 1
+  fi
+
+  section="$1"
+  raw_block=$(get_block "$section")
+
+  if echo "$raw_block" | grep -q '\$TOKEN'; then
+    get_jwt_token
+  fi
+
+  if echo "$raw_block" | grep -q '\$PASS'; then
+    pass_id=$(get_credentials_source "auth-token")
+    creds=$(command pass show "$pass_id")
+    PASS=$(echo "$creds" | sed -n '1p')
+    USER=$(echo "$creds" | sed -n '2p')
+    export USER PASS
+  fi
+
+  block=$(envsubst <<< "$raw_block")
+
+  if [[ -n "$PASS" ]]; then
+    block_masked="${block//$PASS/********}"
+  else
+    block_masked="$block"
+  fi
+
+  # Ejecutar el comando (forzando -sS por si falta)
+  output=$(echo "$block" | sed -E 's/\bcurl\b/curl -sS/' | bash 2>&1)
+  formatted=$(echo "$output" | jq . 2>/dev/null || echo "$output")
+
+  export_dir="./.ep-exports"
+  mkdir -p "$export_dir"
+
+  timestamp=$(date +%Y%m%d-%H%M%S)
+  file="$export_dir/${section}-$timestamp.org"
+
+  cat <<EOF > "$file"
+* Endpoint: $section
+:PROPERTIES:
+:Exported: $(date)
+:END:
+
+** Comando curl
+
+#+BEGIN_SRC sh
+$block_masked
+#+END_SRC
+
+** Resultado de ejecución
+
+#+BEGIN_SRC json
+$formatted
+#+END_SRC
+EOF
+
+  echo "✅ Exportado a $file"
+  exit 0
+fi
+
 # Generar plantilla
 if [[ "$1" == "--generate" ]]; then
   if [[ -f "$CURL_FILE" ]]; then
