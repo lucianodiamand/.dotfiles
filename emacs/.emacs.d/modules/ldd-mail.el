@@ -1,5 +1,15 @@
 ;; -*- lexical-binding: t; -*-
 
+(global-set-key (kbd "C-c i") #'ldd/go-to-inbox)
+
+;; Definir consultas personalizadas
+(defvar ldd/mu4e-inbox-query
+  "maildir:/personal-gmail/Inbox OR maildir:/ips/Inbox OR maildir:/thelabtech/Inbox OR maildir:/yahoo/Inbox OR maildir:/frro/Inbox OR maildir:/fceia/Inbox")
+
+(defun ldd/go-to-inbox ()
+  (interactive)
+  (mu4e-headers-search ldd/mu4e-inbox-query))
+
 (use-package mu4e
   :ensure nil ; Installed via distro package manager
   ;;:defer 20 ; Wait until 20 seconds after startup
@@ -39,6 +49,8 @@
   ;; See this link for more info: https://stackoverflow.com/a/43461973
   (setq mu4e-change-filenames-when-moving t)
 
+  (setq mu4e-user-mail-address-list '("lucianodiamand@gmail.com" "lucianodiamand@yahoo.com" "ldiamand@ips.edu.ar" "ldiamand@frro.utn.edu.ar" "ldiamand@fceia.unr.edu.ar" "luciano.diamand@thelabtech.com.ar"))
+
   ;; Set up contexts for email accounts
   (setq mu4e-contexts
      `( ,(make-mu4e-context
@@ -49,7 +61,11 @@
                                               ("/personal-gmail/Sent" . ?s)
                                               ("/personal-gmail/Trash" . ?t)))
                    (user-mail-address      . "lucianodiamand@gmail.com")
-                   (user-full-name         . "Luciano Diamand")))
+                   (user-full-name         . "Luciano Diamand")
+                   (mu4e-sent-folder   . "/personal-gmail/Sent")
+                   (mu4e-drafts-folder . "/personal-gmail/Drafts")
+                   (mu4e-trash-folder  . "/personal-gmail/Trash")
+                   (mu4e-refile-folder . "/personal-gmail/Archive")))
 
          ,(make-mu4e-context
            :name "IPS Gmail"
@@ -59,7 +75,11 @@
                                               ("/ips/Sent" . ?s)
                                               ("/ips/Trash" . ?t)))
                    (user-mail-address      . "ldiamand@ips.edu.ar")
-                   (user-full-name         . "Luciano Diamand")))
+                   (user-full-name         . "Luciano Diamand")
+                   (mu4e-sent-folder   . "/ips/Sent")
+                   (mu4e-drafts-folder . "/ips/Drafts")
+                   (mu4e-trash-folder  . "/ips/Trash")
+                   (mu4e-refile-folder . "/ips/Archive")))
 
          ,(make-mu4e-context
            :name "TheLabTech Gmail"
@@ -69,7 +89,11 @@
                                               ("/thelabtech/Sent" . ?s)
                                               ("/thelabtech/Trash" . ?t)))
                    (user-mail-address      . "luciano.diamand@thelabtech.com.ar")
-                   (user-full-name         . "Luciano Diamand")))
+                   (user-full-name         . "Luciano Diamand")
+                   (mu4e-sent-folder   . "/thelabtech/Sent")
+                   (mu4e-drafts-folder . "/thelabtech/Drafts")
+                   (mu4e-trash-folder  . "/thelabtech/Trash")
+                   (mu4e-refile-folder . "/thelabtech/Archive")))
 
         ,(make-mu4e-context
            :name "Yahoo"
@@ -79,7 +103,11 @@
                                               ("/yahoo/Sent" . ?s)
                                               ("/yahoo/Trash" . ?t)))
                    (user-mail-address      . "lucianodiamand@yahoo.com")
-                   (user-full-name         . "Luciano Diamand")))
+                   (user-full-name         . "Luciano Diamand")
+                   (mu4e-sent-folder   . "/yahoo/Sent")
+                   (mu4e-drafts-folder . "/yahoo/Drafts")
+                   (mu4e-trash-folder  . "/yahoo/Trash")
+                   (mu4e-refile-folder . "/yahoo/Archive")))
 
          ,(make-mu4e-context
            :name "UTN"
@@ -89,7 +117,11 @@
                                               ("/frro/Sent" . ?s)
                                               ("/frro/Trash" . ?t)))
                    (user-mail-address      . "ldiamand@frro.utn.edu.ar")
-                   (user-full-name         . "Luciano Diamand")))
+                   (user-full-name         . "Luciano Diamand")
+                   (mu4e-sent-folder   . "/frro/Sent")
+                   (mu4e-drafts-folder . "/frro/Drafts")
+                   (mu4e-trash-folder  . "/frro/Trash")
+                   (mu4e-refile-folder . "/frro/Archive")))
 
          ,(make-mu4e-context
            :name "Fceia"
@@ -99,9 +131,11 @@
                                               ("/fceia/Sent" . ?s)
                                               ("/fceia/Trash" . ?t)))
                    (user-mail-address      . "ldiamand@fceia.unr.edu.ar")
-                   (user-full-name         . "Luciano Diamand")))))
-
-  (setq mu4e-context-policy 'pick-first)
+                   (user-full-name         . "Luciano Diamand")
+                   (mu4e-sent-folder   . "/fceia/Sent")
+                   (mu4e-drafts-folder . "/fceia/Drafts")
+                   (mu4e-trash-folder  . "/fceia/Trash")
+                   (mu4e-refile-folder . "/fceia/Archive")))))
 
   ;; Prevent mu4e from permanently deleting trashed items
   ;; This snippet was taken from the following article:
@@ -112,6 +146,22 @@
         (setcdr last (cddr last))
         list)))
 
+  (defun ldd/set-msmtp-account ()
+    (setq message-sendmail-envelope-from 'header)
+    (let ((from (message-field-value "From")))
+      (when (and from (stringp from))
+        (setq message-sendmail-extra-arguments
+              (list "--read-envelope-from"
+                    (concat "--account=" (cond
+                                          ((string-match "lucianodiamand@gmail.com" from) "personal-gmail")
+                                          ((string-match "ldiamand@ips.edu.ar" from) "ips")
+                                          ((string-match "luciano.diamand@thelabtech.com.ar" from) "thelabtech")
+                                          ((string-match "lucianodiamand@yahoo.com" from) "yahoo")
+                                          ((string-match "ldiamand@frro.utn.edu.ar" from) "frro")
+                                          ((string-match "ldiamand@fceia.unr.edu.ar" from) "fceia")
+                                          (t "default"))))))))
+  (add-hook 'message-send-mail-hook #'ldd/set-msmtp-account)
+
   (setf (alist-get 'trash mu4e-marks)
         '(:char ("d" . "▼")
                 :prompt "dtrash"
@@ -120,21 +170,18 @@
                           (mu4e--server-move docid
                                              (mu4e--mark-check-target target) "-N"))))
 
-  ;; Display options
-  (setq mu4e-view-show-images t)
-  (setq mu4e-view-show-addresses 't)
-
   ;; Composing mail
   (setq mu4e-compose-dont-reply-to-self t)
 
-  ;; 
+  ;; Display options
+  (setq mu4e-view-show-addresses 't)
   (setq mu4e-update-interval 300)            ;; Update every 5 minutes
   (setq mu4e-change-filenames-when-moving t) ;; Avoid filename collisions
   (setq mu4e-view-show-images t)             ;; Show inline images
-  (setq mu4e-view-prefer-html t)            ;; Prefer HTML emails
+  (setq mu4e-view-prefer-html t)             ;; Prefer HTML emails
   (setq mu4e-compose-signature-auto-include nil) ;; No automatic signature
   (setq mu4e-context-policy 'pick-first)     ;; Start with the first context
-  (setq mu4e-compose-context-policy 'ask)  ;; Ask for context when composing
+  (setq mu4e-compose-context-policy 'ask)    ;; Ask for context when composing
 
   ;; Set SMTP
   (require 'smtpmail)
@@ -191,10 +238,6 @@
 
   ;;(setq ldd/mu4e-inbox-query
   ;;      "(maildir:/Fastmail/INBOX) AND flag:unread")
-
-  (defun ldd/go-to-inbox ()
-    (interactive)
-    (mu4e-headers-search ldd/mu4e-inbox-query))
 
   ;; Start mu4e in the background so that it syncs mail periodically
   (mu4e t))
