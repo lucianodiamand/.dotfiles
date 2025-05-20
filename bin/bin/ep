@@ -498,6 +498,10 @@ fi
 
 # Menú interactivo si no se pasa nada
 if [[ -z "$1" ]]; then
+  if [[ ! -f "$CURL_FILE" ]]; then
+    print_error "El archivo '$CURL_FILE' no existe. No se puede mostrar el menú interactivo."
+    exit 1
+  fi
   selected=$(list_fzf)
   [[ -n "$selected" ]] && ep_section "$selected"
   exit 0
