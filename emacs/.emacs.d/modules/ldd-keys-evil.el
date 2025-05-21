@@ -10,13 +10,13 @@
 ;;  (global-undo-tree-mode 1))
 
 (use-package evil
-  ;;:ensure t
+  :ensure t
   :demand t
   :init
   ;; Pre-load configuration
-  (setq evil-want-integration t)
-  (setq evil-want-keybinding nil)
-  (setq evil-want-C-u-scroll t)
+  (setq evil-want-integration t
+        evil-want-keybinding nil
+        evil-want-C-u-scroll t)
   ;;(setq evil-want-C-i-jump nil)
   ;;(setq evil-respect-visual-line-mode t)
   ;;(setq evil-undo-system 'undo-tree)
@@ -69,8 +69,8 @@
 ;;  (evil-set-initial-state 'dashboard-mode 'normal))
 
 (use-package evil-collection
+  :ensure t
   :after evil
-  ;;:ensure t
   ;;:custom
   ;;(evil-collection-outline-bind-tab-p nil)
   :config

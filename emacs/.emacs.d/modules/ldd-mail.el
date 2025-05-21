@@ -1,6 +1,7 @@
 ;; -*- lexical-binding: t; -*-
 
 (global-set-key (kbd "C-c i") #'ldd/go-to-inbox)
+(global-set-key (kbd "C-c c") #'mu4e-context-switch)
 
 ;; Definir consultas personalizadas
 (defvar ldd/mu4e-inbox-query
@@ -18,9 +19,7 @@
   ;;       ("C-c m c" . 'mu4e-compose-new)
   ;;       ("C-c m i" . 'ldd/go-to-inbox)
   ;;       ("C-c m s" . 'mu4e-update-mail-and-index))
-  ;;:hook ((mu4e-compose-mode . turn-off-auto-fill)
-  ;;       (mu4e-compose-mode . turn-off-auto-fill)
-  ;;       )
+  ;;:hook (mu4e-compose-mode . (lambda () (buffer-face-set 'fixed-pitch)))
   :config
   (require 'mu4e-org)
   ;; Refresh mail using isync every 10 minutes
@@ -31,13 +30,14 @@
   (setq mu4e-date-format-long "%d/%m/%Y")
   (setq mu4e-headers-date-format "%d/%m/%Y")
 
-  ;;(setq mu4e-headers-fields
-  ;;      '((:human-date    .  12)   ;; Fecha: dd/mm/yyyy
-  ;;        (:flags         .   6)   ;; Marcas (leido, archivado, etc.)
-  ;;        (:from          .  25)   ;; Remitente
-  ;;        (:subject       .  60)   ;; Asunto
-  ;;        (:maildir       .  20))) ;; Carpeta (opcional)
+  (setq mu4e-headers-fields
+        '((:date          .  12)
+          (:flags         .   6)
+          (:from          .  25)
+          (:subject       . nil)))
 
+  (add-hook 'mu4e-headers-mode-hook (lambda () (display-line-numbers-mode -1)))
+  (add-hook 'mu4e-view-mode-hook (lambda () (display-line-numbers-mode -1)))
   ;;(setq mu4e-headers-visible-columns 80)
 
   ;; Use Ivy for mu4e completions (maildir folders, etc)
@@ -146,6 +146,21 @@
         (setcdr last (cddr last))
         list)))
 
+  (defun ldd/mu4e-context-switch-and-show-inbox ()
+  "Cambiar contexto y mostrar la bandeja de entrada correspondiente."
+  (interactive)
+  (mu4e-context-switch)
+  (let ((ctx (mu4e-context-current)))
+    (when ctx
+      (let ((address (cdr (assoc 'user-mail-address (mu4e-context-vars ctx)))))
+        (cond
+         ((string= address "lucianodiamand@gmail.com") (mu4e-headers-search "maildir:/personal-gmail/Inbox"))
+         ((string= address "ldiamand@ips.edu.ar")      (mu4e-headers-search "maildir:/ips/Inbox"))
+         ((string= address "luciano.diamand@thelabtech.com.ar") (mu4e-headers-search "maildir:/thelabtech/Inbox"))
+         ((string= address "lucianodiamand@yahoo.com") (mu4e-headers-search "maildir:/yahoo/Inbox"))
+         ((string= address "ldiamand@frro.utn.edu.ar") (mu4e-headers-search "maildir:/frro/Inbox"))
+         ((string= address "ldiamand@fceia.unr.edu.ar") (mu4e-headers-search "maildir:/fceia/Inbox")))))))
+  
   (defun ldd/set-msmtp-account ()
     (setq message-sendmail-envelope-from 'header)
     (let ((from (message-field-value "From")))
@@ -238,6 +253,8 @@
 
   ;;(setq ldd/mu4e-inbox-query
   ;;      "(maildir:/Fastmail/INBOX) AND flag:unread")
+
+  (global-set-key (kbd "C-c c") #'ldd/mu4e-context-switch-and-show-inbox)
 
   ;; Start mu4e in the background so that it syncs mail periodically
   (mu4e t))
