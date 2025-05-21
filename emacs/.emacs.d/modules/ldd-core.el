@@ -1,8 +1,8 @@
 ;; -*- lexical-binding: t; -*-
 
 ;; Change the user-emacs-directory to keep unwanted things out of ~/.emacs.d
-(setq user-emacs-directory (expand-file-name "~/.cache/emacs/")
-      url-history-file (expand-file-name "url/history" user-emacs-directory))
+;;(setq user-emacs-directory (expand-file-name "~/.cache/emacs/")
+;;      url-history-file (expand-file-name "url/history" user-emacs-directory))
 
 ;; Use no-littering to automatically set common paths to the new user-emacs-directory
 (use-package no-littering
@@ -23,8 +23,6 @@
             ("\\`/dev/shm/" . nil)
             ("." . ,backup-dir))))
 
-  (setq auto-save-default nil)
-
   ;; Tidy up auto-save files
   (setq auto-save-default nil)
   (let ((auto-save-dir (no-littering-expand-var-file-name "auto-save/")))
@@ -44,9 +42,9 @@
 ;; Appearance
 
 ;; Solarized-theme
-(unless (package-installed-p 'solarized-theme)
-  (package-install 'solarized-theme))
-
-(load-theme 'solarized-dark t)
+(use-package solarized-theme
+  :ensure t
+  :config
+  (load-theme 'solarized-dark t))
 
 (provide 'ldd-core)
