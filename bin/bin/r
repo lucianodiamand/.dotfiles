@@ -1,0 +1,141 @@
+#!/bin/bash
+
+SAVEFILE="${HOME}/.my_saved_history"
+# Asegura que el archivo exista
+touch "$SAVEFILE"
+
+usage() {
+    echo "Uso:"
+    echo "  r save [--tag TAG]  # Guarda el último comando con etiqueta opcional"
+    echo "  r list              # Lista los comandos guardados"
+    echo "  r grep TEXTO        # Busca comandos"
+    echo "  r exec N            # Ejecuta el comando número N"
+    echo "  r rm N              # Elimina el comando número N"
+    echo "  r print N           # Muestra el comando N en crudo"
+    echo "  r copy N            # Copia el comando N al portapapeles"
+}
+
+save_last_command() {
+    local tag=""
+    if [[ "$1" == "--tag" ]]; then
+        shift
+        tag="$1"
+        shift
+    fi
+
+    history -a  # Guarda el historial de la sesión
+
+    # Busca el último comando distinto de "r save" o "r"
+    local last_cmd
+    last_cmd=$(tac ~/.bash_history | grep -vE "^r( save| run| rm| list| grep)?(\s|$)" | head -n 1)
+
+    if [[ -z "$last_cmd" ]]; then
+        echo "No se encontró un comando válido."
+        return 1
+    fi
+
+    # No guardar duplicados
+    if grep -Fxq "$last_cmd || $tag" "$SAVEFILE"; then
+        return 0
+    fi
+
+    echo "$last_cmd || $tag" >> "$SAVEFILE"
+}
+
+list_commands() {
+    local n=1
+    while IFS= read -r line; do
+        local cmd="${line%%||*}"
+        local tag="${line#*|| }"
+        printf "%2d: %s %s\n" "$n" "$cmd" "${tag:+[tag: $tag]}"
+        ((n++))
+    done < "$SAVEFILE"
+}
+
+grep_commands() {
+    if [ -z "$1" ]; then
+        echo "Falta patrón de búsqueda"
+        return 1
+    fi
+    grep -ni --color=always "$1" "$SAVEFILE"
+}
+
+exec_command() {
+    local num="$1"
+    local cmd
+    cmd=$(sed -n "${num}p" "$SAVEFILE" | cut -d '|' -f1 | sed 's/ *$//')
+    if [ -z "$cmd" ]; then
+        return 1
+    fi
+    eval "$cmd"
+}
+
+remove_command() {
+    local num="$1"
+    if ! [[ "$num" =~ ^[0-9]+$ ]]; then
+        echo "Número inválido: $num"
+        return 1
+    fi
+    sed -i "${num}d" "$SAVEFILE"
+}
+
+print_command() {
+    local num="$1"
+    if ! [[ "$num" =~ ^[0-9]+$ ]]; then
+        echo "Número inválido: $num"
+        return 1
+    fi
+    local cmd
+    cmd=$(sed -n "${num}p" "$SAVEFILE" | cut -d '|' -f1 | sed 's/ *$//')
+    if [ -z "$cmd" ]; then
+        return 1
+    fi
+    echo "$cmd"
+}
+
+copy_command() {
+    local num="$1"
+    if ! [[ "$num" =~ ^[0-9]+$ ]]; then
+        echo "Número inválido: $num"
+        return 1
+    fi
+
+    local cmd
+    cmd=$(sed -n "${num}p" "$SAVEFILE" | cut -d '|' -f1 | sed 's/ *$//')
+
+    if [ -z "$cmd" ]; then
+        return 1
+    fi
+
+    if command -v xclip &>/dev/null; then
+        echo -n "$cmd" | xclip -selection clipboard
+        echo "Copiado al portapapeles (xclip)"
+    elif command -v xsel &>/dev/null; then
+        echo -n "$cmd" | xsel --clipboard
+        echo "Copiado al portapapeles (xsel)"
+    elif command -v pbcopy &>/dev/null; then
+        echo -n "$cmd" | pbcopy
+        echo "Copiado al portapapeles (pbcopy)"
+    else
+        echo "No se encontró una herramienta para copiar al portapapeles (xclip, xsel o pbcopy)"
+        return 1
+    fi
+}
+
+if [ $# -eq 0 ]; then
+    save_last_command
+    exit
+fi
+
+case "$1" in
+    save) shift; save_last_command "$@" ;;
+    list) list_commands ;;
+    grep) shift; grep_commands "$@" ;;
+    exec) shift; exec_command "$1" ;;
+    rm)   shift; remove_command "$1" ;;
+    print) shift; print_command "$1" ;;
+    copy) shift; copy_command "$1" ;;
+    help|--help|-h) usage ;;
+    *) usage ;;
+esac
+
