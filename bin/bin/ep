@@ -18,6 +18,12 @@ get_block() {
   awk "/^### ${section}[[:space:]]+-/{flag=1; next} /^### /{flag=0} flag" "$CURL_FILE"
 }
 
+get_csv_file() {
+  local section="$1"
+  awk "/*^### ${section}[[:space:]]+-/{flag=1; next} /^### /{flag=0} flag" "$CURL_FILE" |
+    grep '^# csv:' | sed 's/# csv:[[:space:]]*//'
+}
+
 get_credentials_source() {
   section="$1"
 
@@ -77,6 +83,24 @@ get_jwt_token() {
 ep_section() {
   section="$1"
   block=$(get_block "$section")
+
+  csv_file=$(get_csv_file "$section")
+  if [[ -n "$csv_file" && -f "$csv_file" ]]; then
+    # Si estamos en ejecucion normal (sin pick), usar solo la primer fila
+    header=$(head -n1 "$csv_file")
+    first_row=$(tail -n +2 "$csv_file" | head -n1)
+
+    if [[ -z "$first_row" ]]; then
+      print_error "El archivo CSV '$csv_file' no tiene datos"
+      exit 1
+    fi
+
+    IFS=',' read -r $(echo "$header" | tr ',' ' ') <<< "$first_row"
+    export $(echo "$header" | tr ',' ' ')
+  elif [[ -n "$csv_file" ]]; then
+    print_error "No se encontro el archivo CSV '$csv_file'"
+    exit 1
+  fi
 
   if [[ -z "$block" ]]; then
     print_error "El endpoint '$section' no está definido en $CURL_FILE"
@@ -249,6 +273,36 @@ if [[ "$1" == "--print" ]]; then
 
   echo "$block"
   exit 0
+fi
+
+if [[ "$1" == "--pick" ]]; then
+  shift
+  if [[ -z "$1" ]]; then
+    print_error "Debe indicar un endpoint: ep --pick crear-usuario"
+    exit 1
+  fi
+
+  section="$1"
+  csv_file=$(get_csv_file "$section")
+
+  if [[ -z "$csv_file" || ! -f "$csv_file" ]]; then
+    print_error "El endpoint '$section' no tiene CSV o el archivo no existe"
+    exit 1
+  fi
+
+  header=$(head -n1 "$csv_file")
+  fields=$(echo "$header" | tr ',' ' ')
+  selected=$(tail -n +2 "$csv_file" | fzf --prompt="Seleccioná un registro: ")
+
+  if [[ -z "$selected" ]]; then
+    print_error "No se selecciono ningún registro"
+    exit 1
+  fi
+
+  IFS=',' read -r $fields <<< "$selected"
+  export $fields
+  ep_section "$section"
+  exit $?
 fi
 
 if [[ "$1" == "--copy" ]]; then
