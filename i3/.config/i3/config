@@ -282,6 +282,8 @@ client.urgent           #002b36 #dc322f #fdf6e3 #002b36
 #assign [class="code"]             $ws3
 #assign [class="meld"]             $ws8
 #assign [class="Nyxt"]             $ws2
+#assign [class="Emacs" instance="emacs-mail"] $ws0
+
 #for_window [class="Emacs"] move to workspace $ws6
 for_window [class="firefox"] move to workspace $ws2
 for_window [class="Vimb"] move to workspace $ws2
@@ -289,7 +291,7 @@ for_window [class="code"] move to workspace $ws3
 for_window [class="meld"] move to workspace $ws8
 for_window [class="Tor Browser"] move to workspace $ws7
 for_window [class="Nyxt"] move to workspace $ws2
-#for_window [class="Evince"] move to workspace $ws5
 
 for_window [class="^.*"] border pixel 0
+for_window [class="^.*"] resize set 1024 768
 
