@@ -13,6 +13,7 @@ in {
     i3status
     rxvt_unicode
     dmenu
+    (nerdfonts.override { fonts = [ "Hack" ]; })
   ];
 
   # Incluye el archivo real de i3 desde tu estructura actual
@@ -30,5 +31,39 @@ in {
 
   # si tenés .Xdefaults
   # home.file.".Xdefaults".source = "${dotfiles}/rvxt/.Xdefaults";
+
+  let
+    gitIdentities = import ~/.git-identities.nix;
+  in {
+    programs.git = {
+      enable = true;
+
+      userName = gitIdentities.personal.name;
+      userEmail = gitIdentities.personal.email;
+
+      includes = [
+        {
+          condition = "gitdir:${config.home.homeDirectory}/proyectos/cpt/**";
+          path = "${config.home.homeDirectory}/.config/git/config-cpt";
+        }
+        {
+          condition = "gitdir:${config.home.homeDirectory}/opensource/**";
+          path = "${config.home.homeDirectory}/.config/git/config-oss";
+        }
+      ];
+    };
+
+    home.file.".config/git/config-cpt".text = ''
+      [user]
+        name = ${gitIdentities.trabajo.name}
+        email = ${gitIdentities.trabajo.email}
+    '';
+
+    home.file.".config/git/config-oss".text = ''
+      [user]
+        name = ${gitIdentities.oss.name}
+        email = ${gitIdentities.oss.email}
+    '';
+  }
 }
 

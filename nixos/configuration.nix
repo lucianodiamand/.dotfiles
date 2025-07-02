@@ -15,9 +15,10 @@
   boot.loader.efi.canTouchEfiVariables = true;
 
   networking.hostName = "io"; # Define your hostname.
+  networking.networkmanager.enable = true;
+  networking.firewall.allowedTCPPorts = [ 9555 ]; # tu puerto SSH
   # Pick only one of the below networking options.
   # networking.wireless.enable = true;  # Enables wireless support via wpa_supplicant.
-  # networking.networkmanager.enable = true;  # Easiest to use and most distros use this by default.
 
   # Set your time zone.
   time.timeZone = "America/Argentina/Buenos_Aires";
@@ -60,7 +61,7 @@
   # Define a user account. Don't forget to set a password with ‘passwd’.
   users.users.user = {
     isNormalUser = true;
-    extraGroups = [ "wheel" ]; # Enable ‘sudo’ for the user.
+    extraGroups = [ "wheel" "dialout" "plugdev" ];
     shell = pkgs.zsh;
     #packages = with pkgs; [
     #  tree
@@ -77,6 +78,7 @@
     git
     zsh
     stow
+    curl
   ];
 
   # Some programs need SUID wrappers, can be configured further or are
@@ -89,8 +91,19 @@
 
   # List services that you want to enable:
 
+  services.udev.extraRules = ''
+    SUBSYSTEM=="usb", ATTR{idVendor}=="18d1", MODE="0666", GROUP="plugdev"
+    SUBSYSTEM=="usb", ATTR{idVendor}=="0fce", MODE="0666", GROUP="plugdev"
+    SUBSYSTEM=="usb", ATTR{idVendor}=="22b8", MODE="0666", GROUP="plugdev"
+  '';
+
   # Enable the OpenSSH daemon.
   services.openssh.enable = true;
+  services.openssh = {
+    enable = true;
+    ports = [ 9555 ];
+  };
+
 
   nix.settings.experimental-features = [ "nix-command" "flakes" ];
 
