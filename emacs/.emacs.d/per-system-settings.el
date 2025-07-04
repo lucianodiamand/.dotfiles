@@ -1,6 +1,6 @@
 (require 'map) ;; Needed for map-merge
 
-(setq dw/system-settings
+(setq ldd/system-settings
       (append
        ;; Put all system-specific settings at the front so that their values are
        ;; found first
