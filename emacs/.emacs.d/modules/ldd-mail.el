@@ -1,5 +1,66 @@
 ;; -*- lexical-binding: t; -*-
 
+(defvar ldd/mail-account-alist
+  '(("lucianodiamand@gmail.com"
+     :shortname "personal-gmail"
+     :full-name "Luciano Diamand"
+     :maildir "personal-gmail"
+     :inbox "/personal-gmail/Inbox"
+     :sent "/persona-gmail/Sent"
+     :drafts "/personal-gmail/Drafts"
+     :trash "/personal-gmail/Trash"
+     :archive "/personal-gmail/Archive")
+
+    ("ldiamand@ips.edu.ar"
+     :shortname "ips"
+     :full-name "Luciano Diamand"
+     :maildir "ips"
+     :inbox "/ips/Inbox"
+     :sent "/ips/Sent"
+     :drafts "/ips/Drafts"
+     :trash "/ips/Trash"
+     :archive "/ips/Archive")
+
+    ("luciano.diamand@thelabtech.com.ar"
+     :shortname "thelabtech"
+     :full-name "Luciano Diamand"
+     :maildir "thelabtech"
+     :inbox "/thelabtech/Inbox"
+     :sent "/thelabtech/Sent"
+     :drafts "/thelabtech/Drafts"
+     :trash "/thelabtech/Trash"
+     :archive "/thelabtech/Archive")
+
+    ("lucianodiamand@yahoo.com"
+     :shortname "yahoo"
+     :full-name "Luciano Diamand"
+     :maildir "yahoo"
+     :inbox "/yahoo/Inbox"
+     :sent "/yahoo/Sent"
+     :drafts "/yahoo/Drafts"
+     :trash "/yahoo/Trash"
+     :archive "/yahoo/Archive")
+
+    ("ldiamand@frro.utn.edu.ar"
+     :shortname "frro"
+     :full-name "Luciano Diamand"
+     :maildir "frro"
+     :inbox "/frro/Inbox"
+     :sent "/frro/Sent"
+     :drafts "/frro/Drafts"
+     :trash "/frro/Trash"
+     :archive "/frro/Archive")
+
+    ("ldiamand@fceia.unr.edu.ar"
+     :shortname "fceia"
+     :full-name "Luciano Diamand"
+     :maildir "fceia"
+     :inbox "/fceia/Inbox"
+     :sent "/fceia/Sent"
+     :drafts "/fceia/Drafts"
+     :trash "/fceia/Trash"
+     :archive "/fceia/Archive")))
+
 (global-set-key (kbd "C-c i") #'ldd/go-to-inbox)
 (global-set-key (kbd "C-c c") #'mu4e-context-switch)
 
@@ -10,6 +71,55 @@
 (defun ldd/go-to-inbox ()
   (interactive)
   (mu4e-headers-search ldd/mu4e-inbox-query))
+
+(defun ldd/load-and-process-aliases ()
+  "Cargar y procesar aliases correctamente para mu4e"
+  (ldd/load-email-aliases)
+  (setq mu4e-alias-list
+        (mapcar (lambda (alias)
+                  (cons (car alias)
+                        (split-string (cdr alias) ",\\s *" t)))
+                email-aliases))
+  ;; Actualizar la lista que usa mu4e para completado
+  (setq mu4e-alias-define-list mu4e-alias-list)
+  (setq mu4e-compose-complete-aliases t))
+
+;; Función para cargar aliases de correo
+(defun ldd/load-email-aliases ()
+  "Cargar alias de correo desde archivos .el en ~/.config/email/aliases/"
+  (let ((alias-dir "~/.config/email/aliases/"))
+    (setq email-aliases '())  ; Inicializar variable
+    
+    (when (file-directory-p alias-dir)
+      (dolist (file (directory-files alias-dir t "\\.el$"))
+        (when (file-readable-p file)
+          (with-temp-buffer
+            (insert-file-contents file)
+            (goto-char (point-min))
+            ;; Leer la lista de aliases directamente
+            (let ((aliases (read (current-buffer))))
+              (setq email-aliases (append email-aliases aliases)))))))))
+
+;; Función para procesar los aliases cargados
+(defun ldd/process-email-aliases ()
+  "Procesar los alias cargados y prepararlos para mu4e"
+  (setq mu4e-alias-list
+        (when (boundp 'email-aliases)
+          (mapcar (lambda (alias)
+                    (cons (car alias)
+                          (split-string (cdr alias) ",\\s *" t)))
+                  email-aliases))))
+
+;; Cargar y procesar aliases al inicio
+(ldd/load-email-aliases)
+(ldd/process-email-aliases)
+
+;; Función para expandir aliases al componer correos
+(defun ldd/mu4e-alias-expand (name)
+  "Expandir alias al componer correos"
+  (when mu4e-alias-list
+    (let ((alias (assoc name mu4e-alias-list)))
+      (if alias (cdr alias) name))))
 
 (use-package mu4e
   :ensure nil ; Installed via distro package manager
@@ -39,6 +149,43 @@
   (add-hook 'mu4e-headers-mode-hook (lambda () (display-line-numbers-mode -1)))
   (add-hook 'mu4e-view-mode-hook (lambda () (display-line-numbers-mode -1)))
   ;;(setq mu4e-headers-visible-columns 80)
+
+  ;; Esto ayuda a que los aliases tengan prioridad en el completado
+  (setq mu4e-compose-complete-first 'aliases)
+
+  ;; Usa esto si quieres ver los aliases expandidos al terminar de escribir
+  (defun ldd/mu4e-alias-expand-on-tab ()
+    "Expandir alias al presionar TAB"
+    (interactive)
+    (let ((alias (mu4e-alias-expand-names (mu4e-alias-which-alias))))
+      (when alias
+        (delete-region (line-beginning-position) (line-end-position))
+        (insert alias))))
+
+  ;; Funciones para manejo de aliases
+  (defun ldd/mu4e-complete-alias ()
+    "Completado manual de aliases"
+    (interactive)
+    (let ((completion-ignore-case t)
+          (aliases (mapcar 'car mu4e-alias-list)))
+      (insert (completing-read "Alias: " aliases nil nil nil nil nil nil t))))
+
+  (defun ldd/mu4e-alias-expand-on-tab ()
+    "Expandir alias al presionar TAB"
+    (interactive)
+    (let* ((end (point))
+           (beg (save-excursion
+                  (re-search-backward "\\(\\`\\|[\n:,]\\)[ \t]*")
+                  (match-end 0)))
+           (alias (buffer-substring-no-properties beg end))
+           (expansion (cdr (assoc alias mu4e-alias-list))))
+      (when expansion
+        (delete-region beg end)
+        (insert (mapconcat 'identity expansion ", ")))))
+
+  ;; Asignación de teclas
+  (define-key mu4e-compose-mode-map (kbd "C-c a") #'ldd/mu4e-complete-alias)
+  (define-key mu4e-compose-mode-map (kbd "<tab>") #'ldd/mu4e-alias-expand-on-tab)
 
   ;; Use Ivy for mu4e completions (maildir folders, etc)
   (setq mu4e-completing-read-function #'completing-read)

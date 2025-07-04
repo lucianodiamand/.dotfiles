@@ -1,12 +1,16 @@
 ;; -*- lexical-binding: t; -*-
 
 (use-package org-roam
-  :ensure t
   :custom
   (org-roam-directory "~/org/roam")
+  (org-agenda-files '("~/org/roam/proyectos/"
+                      "~/org/roam/versiones/"
+                      "~/org/roam/tareas/"))
   :bind (("C-c n l" . org-roam-buffer-toggle)
          ("C-c n f" . org-roam-node-find)
-         ("C-c n i" . org-roam-node-insert))
+         ("C-c n i" . org-roam-node-insert)
+         ("C-c n c" . org-roam-capture)
+         ("C-c n j" . org-roam-dailies-capture-today))
   :config
   ;; Asegurar que el directorio exista antes de usarlo
   (unless (file-directory-p org-roam-directory)
