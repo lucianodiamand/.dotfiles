@@ -22,8 +22,6 @@ vimb/.config/vimb/history
 
 nvim/.config/nvim/lazy-lock.json
 
-i3status/.config/i3status/config
-
 user/.git-identities.nix
 
 *.lock
