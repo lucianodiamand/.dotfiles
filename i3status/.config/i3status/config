@@ -1,0 +1,60 @@
+
+general {
+        colors = true
+        color_good = "#859900"
+        color_bad = "#dc322f"
+        color_degraded = "#cb4b16"
+        output_format = "i3bar"
+        interval = 5
+}
+
+#order += "ipv6"
+order += "wireless wlan0"
+order += "ethernet enp0s25"
+order += "battery 0"
+order += "disk /"
+order += "load"
+order += "memory"
+order += "tztime local"
+
+wireless wlan0 {
+        format_up = "%ip (%bitrate,%quality at %essid)"
+        format_down = ""
+}
+
+ethernet enp0s25 {
+        format_up = "%ip (%speed)"
+        format_down = ""
+}
+
+# icons extracted from https://www.nerdfonts.com/cheat-sheet
+battery 0 {
+        format = "%status %percentage %remaining %emptytime"
+        format_down = "󱉞"
+        status_chr = "󰂄"
+        status_bat = "󰂂"
+        status_unk = "󰂃"
+        status_full = "󰁹"
+        path = "/sys/class/power_supply/BAT%d/uevent"
+        low_threshold = 10
+}
+
+disk "/" {
+       format = "%free"
+}
+
+load {
+        format = "%5min"
+}
+
+memory {
+       format = "%used"
+       threshold_degraded = "10%"
+       format_degraded = "MEMORY: %free"
+}
+
+tztime local {
+        format = "%d/%m %H:%M:%S"
+}
+
+
