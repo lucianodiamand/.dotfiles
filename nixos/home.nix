@@ -12,6 +12,7 @@ in {
   home.packages = with pkgs; [
     i3
     i3status
+    xss-lock
     rxvt-unicode-unwrapped
     dmenu
     pkgs.nerd-fonts.hack
