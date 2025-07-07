@@ -24,4 +24,3 @@ nvim/.config/nvim/lazy-lock.json
 
 user/.git-identities.nix
 
-*.lock
