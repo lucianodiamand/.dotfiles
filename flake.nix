@@ -20,7 +20,7 @@
       homeConfigurations.user = home-manager.lib.homeManagerConfiguration {
         inherit pkgs;
         modules = [
-          ./home.nix
+          ./nixos/home.nix
           {
             home.username = "user";
             home.homeDirectory = "/home/user";
