@@ -2,6 +2,7 @@
 
 let
   dotfiles = ../.;
+  pass-otp = pkgs.pass.withExtensions (e: [ e.pass-otp ]);
 in {
   home.username = "user";
   home.homeDirectory = "/home/user";
@@ -23,7 +24,7 @@ in {
     home-manager
     networkmanagerapplet
     gnupg
-    pass
+    pass-otp
     pinentry-tty
     openssh
     nodejs_20
@@ -31,6 +32,7 @@ in {
     python3
     ripgrep
     fzf
+    meld
     unzip
     fd
     gcc
@@ -63,16 +65,15 @@ in {
   services.gpg-agent = {
     enable = true;
     pinentry.package = pkgs.pinentry.tty;
-    #pinentryFlavor = "tty";  # También puede ser "gtk2", "qt", "curses", etc.
+    #pinentryFlavor = "tty";  # "gtk2", "qt", "curses", etc.
     #defaultCacheTtl = 1800;
     #maxCacheTtl = 7200;
-    enableSshSupport = true;  # Si quieres usar GPG como agente SSH
+    enableSshSupport = true;
   };
  
   programs.direnv.enable = true;
   programs.direnv.nix-direnv.enable = true;
 
-  #programs.mu.enable = true;
   programs.msmtp.enable = true;
 
   programs.emacs = {
@@ -123,6 +124,23 @@ in {
   # nvim
   home.file.".config/nvim".source = "${dotfiles}/nvim/.config/nvim";
 
+  home.activation.createDirs = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+    mkdir -p ~/.mail/personal-gmail
+    mkdir -p ~/.mail/thelabtech
+    mkdir -p ~/.mail/fceia
+    mkdir -p ~/.mail/yahoo
+    mkdir -p ~/.mail/frro
+    mkdir -p ~/.mail/ips
+
+    mkdir -p ~/dev
+
+    mkdir -p ~/courses/aus/taller2
+    mkdir -p ~/courses/aus/taller3
+    mkdir -p ~/courses/aus/seminario3
+
+    mkdir -p ~/work/thelabtech/l2
+  '';
+
   home.activation.generateHostingerKey = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
     KEYFILE="$HOME/.ssh/bitbucket.l2.repo.key"
     if [ ! -f "$KEYFILE" ]; then
@@ -141,6 +159,15 @@ in {
       ${pkgs.openssh}/bin/ssh-keygen -t ed25519 -f "$KEYFILE" -C "Donweb cpt vps server" -N ""
       chmod 600 "$KEYFILE"
     fi
+
+    KEYFILE="$HOME/.ssh/github.personal.repo.key"
+    if [ ! -f "$KEYFILE" ]; then
+      echo "Generating SSH key for personal Github repo..."
+      mkdir -p "$HOME/.ssh"
+      chmod 700 "$HOME/.ssh"
+      ${pkgs.openssh}/bin/ssh-keygen -t ed25519 -f "$KEYFILE" -C "Personal Github repo" -N ""
+      chmod 600 "$KEYFILE"
+    fi
   '';
 
   home.file.".ssh/config".text = ''
@@ -153,6 +180,9 @@ in {
       HostName 179.43.117.86
       IdentityFile ~/.ssh/cpt-prod.server.key
       Port 4626
+
+    Host github.com
+      IdentityFile ~/.ssh/github.personal.repo.key
   '';
 
   programs.git = {
@@ -162,6 +192,7 @@ in {
       includeIf."gitdir:/home/user/work/thelabtech/**".path = "/home/user/.config/git/gitconfig-thelabtech";
       includeIf."gitdir:/home/user/courses/aus/**".path = "/home/user/.config/git/gitconfig-aus";
       includeIf."gitdir:/home/user/dev/projects/**".path = "/home/user/.config/git/gitconfig-personal";
+      includeIf."gitdir:/home/user/.dotfiles/".path = "/home/user/.config/git/gitconfig-personal";
     };
   };
 
