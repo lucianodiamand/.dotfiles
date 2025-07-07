@@ -98,7 +98,7 @@ in {
     shellAliases = {
       rgrep = "grep -r";
     };
-    initExtra = ''
+    initContent = ''
       eval "$(dircolors ~/.dir_colors)"
     '';
   };
