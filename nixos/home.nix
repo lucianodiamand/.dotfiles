@@ -334,6 +334,7 @@ in {
       User lucianodiamand@yahoo.com
       PassCmd "pass emails/yahoo_mu4e"
       TLSType IMAPS
+      PipelineDepth 1
 
       IMAPAccount frro
       Host mail.frro.utn.edu.ar
@@ -425,6 +426,7 @@ in {
       Patterns *
       Create Both
       Sync Pull
+      MaxMessages 100
 
       Channel frro
       Far :frro-remote:
