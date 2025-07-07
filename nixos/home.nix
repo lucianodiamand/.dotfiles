@@ -43,6 +43,11 @@ in {
 
   fonts.fontconfig.enable = true;
 
+  home.sessionVariables = {
+    EDITOR = "vi";
+    VISUAL = "vi";
+  };
+
   # Incluye el archivo real de i3 desde tu estructura actual
   home.file.".config/i3/config".source = "${dotfiles}/i3/.config/i3/config";
 
