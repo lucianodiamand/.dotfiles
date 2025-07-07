@@ -96,9 +96,14 @@ in {
     syntaxHighlighting.enable = true;
 
     shellAliases = {
-      ll = "ls -l";
+      rgrep = "grep -r";
     };
+    initExtra = ''
+      eval "$(dircolors ~/.dir_colors)"
+    '';
   };
+
+  home.file.".dir_colors".source = "${dotfiles}/dir_colors/.dir_colors";
 
   home.file.".config/mu/mu.cfg".text = ''
     [mu]
