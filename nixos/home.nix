@@ -17,6 +17,12 @@ in {
     dmenu
     pkgs.nerd-fonts.hack
     neovim
+    (pkgs.writeShellScriptBin "vi" ''
+      exec nvim "$@"
+    '')
+    (pkgs.writeShellScriptBin "vim" ''
+      exec nvim "$@"
+    '')
     mu
     isync
     msmtp
@@ -39,6 +45,12 @@ in {
     gcc
     (pkgs.nodePackages.typescript-language-server)
     (pkgs.nodePackages.typescript)
+    lua-language-server
+
+    # árbol base y parsers necesarios
+    tree-sitter
+    tree-sitter-langs
+    treesit-grammars.with-all-grammars
   ];
 
   fonts.fontconfig.enable = true;
@@ -133,7 +145,9 @@ in {
   home.file.".emacs.d/modules/ldd-mail.el".source = "${dotfiles}/emacs/.emacs.d/modules/ldd-mail.el";
 
   # nvim
-  home.file.".config/nvim".source = "${dotfiles}/nvim/.config/nvim";
+  home.file.".config/nvim/init.lua".source = "${dotfiles}/nvim/.config/nvim/init.lua";
+  home.file.".config/nvim/lua".source = "${dotfiles}/nvim/.config/nvim/lua";
+  home.file.".config/nvim/ftplugin".source = "${dotfiles}/nvim/.config/nvim/ftplugin";
 
   home.activation.createDirs = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
     mkdir -p ~/.mail/personal-gmail
@@ -431,7 +445,6 @@ in {
       Patterns *
       Create Both
       Sync Pull
-      MaxMessages 100
 
       Channel frro
       Far :frro-remote:
