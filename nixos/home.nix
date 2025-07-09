@@ -37,10 +37,7 @@ in {
     nodejs_20
     yarn
     python3
-    ripgrep
-    fzf
     meld
-    unzip
     fd
     gcc
     (pkgs.nodePackages.typescript-language-server)
@@ -49,8 +46,73 @@ in {
 
     # árbol base y parsers necesarios
     tree-sitter
-    tree-sitter-langs
-    treesit-grammars.with-all-grammars
+    #tree-sitter-langs
+    #treesit-grammars.with-all-grammars
+
+    # command line tools
+    bat
+    tig
+    zoxide
+    tldr
+    eza
+    fzf
+    ripgrep
+    xclip
+    wipe
+    fdupes
+    unzip
+    udisks2
+    smartmontools
+
+    # editors
+    ed
+
+    html2text
+
+    scalpel
+
+    gobuster
+
+    xorriso
+
+    binwalk
+
+    # image viewers
+    eog
+
+    # networking tools
+    tcpdump
+    ethtool
+    wavemon
+    nmap
+
+    openfortivpn
+
+    w3m
+
+    guile
+
+    qemu
+
+    # eca tools
+    kicad
+    picocom
+    arduino
+
+    dosfstools
+
+    zathura
+    testdisk
+
+    inkscape
+    dia
+
+    cryptsetup
+
+    # 3d printing
+    openscad
+    prusa-slicer
+
   ];
 
   fonts.fontconfig.enable = true;
