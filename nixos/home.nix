@@ -113,6 +113,8 @@ in {
     openscad
     prusa-slicer
 
+    # virtualisation
+    virt-manager
   ];
 
   fonts.fontconfig.enable = true;
