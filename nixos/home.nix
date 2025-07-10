@@ -191,6 +191,11 @@ in {
     };
     initContent = ''
       eval "$(dircolors ~/.dir_colors)"
+
+      # Asegurar que ~/bin está en el PATH incluso en shells interactivos no-login
+      if [[ ":$PATH:" != *":$HOME/bin:"* ]]; then
+        export PATH="$HOME/bin:$PATH"
+      fi
     '';
   };
 
