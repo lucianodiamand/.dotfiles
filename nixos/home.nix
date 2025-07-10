@@ -115,6 +115,7 @@ in {
 
     # virtualisation
     virt-manager
+    virt-viewer
   ];
 
   fonts.fontconfig.enable = true;
@@ -535,5 +536,8 @@ in {
     '';
   };
 
+  xdg.configFile."libvirt/libvirt.conf".text = ''
+    uri_default = "qemu:///system"
+  '';
 }
 
