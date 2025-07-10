@@ -1,7 +1,7 @@
 #!/usr/bin/env zsh
 
 # Ruta del directorio donde están las plantillas
-TEMPLATES_DIR=~/.project-templates
+TEMPLATES_DIR=~/.project-templates/
 
 # Buscar y seleccionar template con fzf
 template=$(find "$TEMPLATES_DIR" -maxdepth 1 -mindepth 1 -type d | fzf --prompt="Elige un template: ")
