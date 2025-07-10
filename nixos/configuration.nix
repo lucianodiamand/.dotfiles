@@ -14,6 +14,8 @@
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
 
+  boot.kernelModules = [ "kvm-intel" ];
+
   networking.hostName = "io"; # Define your hostname.
   networking.networkmanager.enable = true;
   networking.firewall.allowedTCPPorts = [ 9555 ]; # tu puerto SSH
@@ -61,7 +63,7 @@
   # Define a user account. Don't forget to set a password with ‘passwd’.
   users.users.user = {
     isNormalUser = true;
-    extraGroups = [ "wheel" "dialout" "plugdev" ];
+    extraGroups = [ "wheel" "dialout" "plugdev" "libvirtd" ];
     shell = pkgs.zsh;
     #packages = with pkgs; [
     #  tree
@@ -79,15 +81,15 @@
     git
     zsh
     stow
+    pinentry-tty
   ];
 
   # Some programs need SUID wrappers, can be configured further or are
   # started in user sessions.
   # programs.mtr.enable = true;
-  # programs.gnupg.agent = {
-  #   enable = true;
-  #   enableSSHSupport = true;
-  # };
+  #programs.gnupg.pinentry.program = pkgs.pinentry-tty;
+
+  #programs.gnupg.agent.pinentryPackage = pkgs.pinentry-curses;
 
   # List services that you want to enable:
 
@@ -103,7 +105,6 @@
     ports = [ 9555 ];
   };
 
-
   nix.settings.experimental-features = [ "nix-command" "flakes" ];
 
   # Open ports in the firewall.
@@ -111,6 +112,9 @@
   # networking.firewall.allowedUDPPorts = [ ... ];
   # Or disable the firewall altogether.
   # networking.firewall.enable = false;
+
+  # virtualisation
+  virtualisation.libvirtd.enable = true;
 
   # Copy the NixOS configuration file and link it from the resulting system
   # (/run/current-system/configuration.nix). This is useful in case you
