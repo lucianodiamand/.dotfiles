@@ -122,6 +122,7 @@ in {
   fonts.fontconfig.enable = true;
 
   home.file."bin".source = "${dotfiles}/bin/bin";
+  home.file.".project-templates".source = "${dotfiles}/nixos/project-templates";
 
   home.sessionPath = [
     "$HOME/bin"
