@@ -117,6 +117,9 @@ in {
     # virtualisation
     virt-manager
     virt-viewer
+
+    # utils
+    screenkey
   ];
 
   fonts.fontconfig.enable = true;
