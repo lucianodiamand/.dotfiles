@@ -34,7 +34,7 @@ in {
     pass-otp
     pinentry-tty
     openssh
-    nodejs_20
+    nodejs_22
     yarn
     python3
     meld
@@ -85,6 +85,7 @@ in {
     ethtool
     wavemon
     nmap
+    dig
 
     openfortivpn
 
@@ -119,6 +120,12 @@ in {
   ];
 
   fonts.fontconfig.enable = true;
+
+  home.file."bin".source = "${dotfiles}/bin/bin";
+
+  home.sessionPath = [
+    "$HOME/bin"
+  ];
 
   home.sessionVariables = {
     EDITOR = "vi";
