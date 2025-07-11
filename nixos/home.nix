@@ -123,11 +123,14 @@ in {
 
     # databases
     dbeaver-bin
+
+    # rust dev
+    cargo
   ];
 
   fonts.fontconfig.enable = true;
 
-  home.file."bin".source = "${dotfiles}/bin/bin";
+  home.file."bin".source = "${dotfiles}/zsh/bin";
   home.file.".project-templates".source = "${dotfiles}/nixos/project-templates";
 
   home.sessionPath = [
@@ -248,6 +251,7 @@ in {
     mkdir -p ~/courses/aus/seminario3
 
     mkdir -p ~/work/thelabtech/l2
+    mkdir -p ~/work/personal
   '';
 
   home.activation.generateHostingerKey = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
@@ -300,7 +304,7 @@ in {
     extraConfig = {
       includeIf."gitdir:/home/user/work/thelabtech/**".path = "/home/user/.config/git/gitconfig-thelabtech";
       includeIf."gitdir:/home/user/courses/aus/**".path = "/home/user/.config/git/gitconfig-aus";
-      includeIf."gitdir:/home/user/dev/projects/**".path = "/home/user/.config/git/gitconfig-personal";
+      includeIf."gitdir:/home/user/work/projects/**".path = "/home/user/.config/git/gitconfig-personal";
       includeIf."gitdir:/home/user/.dotfiles/".path = "/home/user/.config/git/gitconfig-personal";
     };
   };
