@@ -81,6 +81,7 @@ in {
     eog
 
     # networking tools
+    wget
     tcpdump
     ethtool
     wavemon
@@ -144,6 +145,7 @@ in {
   home.sessionVariables = {
     EDITOR = "vi";
     VISUAL = "vi";
+    LD_LIBRARY_PATH = "$HOME/.oracle/instantclient_23_8";
   };
 
   # Incluye el archivo real de i3 desde tu estructura actual
@@ -239,6 +241,20 @@ in {
   home.file.".config/nvim/init.lua".source = "${dotfiles}/nvim/.config/nvim/init.lua";
   home.file.".config/nvim/lua".source = "${dotfiles}/nvim/.config/nvim/lua";
   home.file.".config/nvim/ftplugin".source = "${dotfiles}/nvim/.config/nvim/ftplugin";
+
+  home.activation.installOracleInstantClientDir = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+    if [ ! -d "$HOME/.oracle/instantclient_23_8" ]; then
+      echo "Creando directorio y ejecutando script..."
+
+      mkdir -p "$HOME/.oracle"
+
+      INSTANT_CLIENT=instantclient-basic-linux.x64-23.8.0.25.04.zip
+      url_base='https://download.oracle.com/otn_software/linux/instantclient/2380000/'
+
+      ${pkgs.wget}/bin/wget -c "$url_base$INSTANT_CLIENT" -P /tmp
+      ${pkgs.unzip}/bin/unzip "/tmp/$INSTANT_CLIENT" -d "$HOME/.oracle"
+    fi
+  '';
 
   home.activation.createDirs = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
     mkdir -p ~/.mail/personal-gmail
