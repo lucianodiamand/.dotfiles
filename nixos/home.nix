@@ -1,4 +1,4 @@
-{ config, pkgs, lib, ... }:
+{ config, pkgs, lib, rcmd, ... }:
 
 let
   dotfiles = ../.;
@@ -123,9 +123,13 @@ in {
 
     # databases
     dbeaver-bin
+    mysql-client
 
     # rust dev
     cargo
+
+    # personal commands
+    rcmd.packages.${pkgs.system}.default
   ];
 
   fonts.fontconfig.enable = true;
