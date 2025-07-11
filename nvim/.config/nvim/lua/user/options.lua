@@ -56,7 +56,7 @@ vim.opt.scrolloff = 10
 -- TODO
 --vim.opt.sidescroll = 5
 -- Which terminal to use with :terminal or :!
-vim.opt.shell = "fish"
+vim.opt.shell = "zsh"
 -- When nonempty, shows the effects of :substitute, :smagic, :snomagic and user
 -- commands with the :command-preview flag as you type
 vim.opt.inccommand = "split"
