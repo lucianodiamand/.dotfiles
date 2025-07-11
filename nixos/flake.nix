@@ -8,9 +8,11 @@
       url = "github:nix-community/home-manager";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+
+    rcmd.url = "github:lucianodiamand/rcmd";
   };
 
-  outputs = { nixpkgs, home-manager, ... }:
+  outputs = { nixpkgs, home-manager, rcmd, ... }:
     let
       system = "x86_64-linux";
       pkgs = import nixpkgs {
@@ -21,12 +23,10 @@
         inherit pkgs;
         modules = [
           ./home.nix
-          {
-            home.username = "user";
-            home.homeDirectory = "/home/user";
-            home.stateVersion = "25.05";
-          }
         ];
+        extraSpecialArgs = {
+          inherit rcmd;
+        };
       };
     };
 }
