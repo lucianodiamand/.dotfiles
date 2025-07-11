@@ -120,6 +120,9 @@ in {
 
     # utils
     screenkey
+
+    # databases
+    dbeaver-bin
   ];
 
   fonts.fontconfig.enable = true;
