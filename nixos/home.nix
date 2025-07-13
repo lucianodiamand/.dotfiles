@@ -272,6 +272,9 @@ in {
 
     mkdir -p ~/work/thelabtech/l2
     mkdir -p ~/work/personal
+
+    mkdir -p ~/Documents
+    mkdir -p ~/Downloads
   '';
 
   home.activation.generateHostingerKey = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
