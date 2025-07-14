@@ -12,8 +12,8 @@ return {
     vim.g.loaded_netrwPlugin = 1
 
     -- change color for arrows in tree to light blue
-    vim.cmd([[ highlight NvimTreeFolderArrowClosed guifg=#3FC5FF ]])
-    vim.cmd([[ highlight NvimTreeFolderArrowOpen guifg=#3FC5FF ]])
+    vim.cmd([[ highlight NvimTreeFolderArrowClosed guifg=#268bd2 ]])
+    vim.cmd([[ highlight NvimTreeFolderArrowOpen guifg=#268bd2 ]])
 
     -- local sort_by = function(nodes)
     --   table.sort(nodes, function(a, b)
