@@ -99,6 +99,7 @@ return {
 		lspconfig["lua_ls"].setup({
 			capabilities = capabilities,
 			on_attach = on_attach,
+      cmd = { "lua-language-server" },
 			settings = { -- custom settings for lua
 				Lua = {
 					-- make the language server recognize "vim" global

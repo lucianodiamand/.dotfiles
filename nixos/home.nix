@@ -327,6 +327,7 @@ in {
     extraConfig = {
       includeIf."gitdir:/home/user/work/thelabtech/**".path = "/home/user/.config/git/gitconfig-thelabtech";
       includeIf."gitdir:/home/user/courses/aus/**".path = "/home/user/.config/git/gitconfig-aus";
+      includeIf."gitdir:/home/user/dev/**".path = "/home/user/.config/git/gitconfig-personal";
       includeIf."gitdir:/home/user/work/projects/**".path = "/home/user/.config/git/gitconfig-personal";
       includeIf."gitdir:/home/user/.dotfiles/".path = "/home/user/.config/git/gitconfig-personal";
     };
