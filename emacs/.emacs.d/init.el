@@ -48,6 +48,7 @@
 (require 'ldd-android)
 (require 'ldd-typescript)
 (require 'ldd-scheme)
+;;(require 'ldd-lua)
 
 (require 'ldd-gpt)
 
