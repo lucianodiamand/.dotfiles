@@ -1,6 +1,5 @@
 ;; -*- lexical-binding: t; -*-
 
-;; LSP para Java
 (use-package lsp-mode
   :hook ((java-mode . lsp-deferred))
   :commands (lsp lsp-deferred)
@@ -34,7 +33,6 @@
   :config
   (projectile-mode))
 
-;; Opcional: DAP (debugging)
 (use-package dap-mode
   :after lsp-mode
   :config
