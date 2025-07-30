@@ -135,6 +135,7 @@
   ;; Refresh mail using isync every 10 minutes
   ;; NOTE: Trying to refresh mail manually now to increase focus
   ;;(setq mu4e-update-interval (* 10 60))
+  (setq mu4e-update-interval nil)
   (setq mu4e-get-mail-command "mbsync -a")
   (setq mu4e-maildir "~/.mail")
   (setq mu4e-date-format-long "%d/%m/%Y")
@@ -337,7 +338,7 @@
 
   ;; Display options
   (setq mu4e-view-show-addresses 't)
-  (setq mu4e-update-interval 300)            ;; Update every 5 minutes
+  ;;(setq mu4e-update-interval 300)            ;; Update every 5 minutes
   (setq mu4e-change-filenames-when-moving t) ;; Avoid filename collisions
   (setq mu4e-view-show-images t)             ;; Show inline images
   (setq mu4e-view-prefer-html t)             ;; Prefer HTML emails
@@ -404,7 +405,8 @@
   (global-set-key (kbd "C-c c") #'ldd/mu4e-context-switch-and-show-inbox)
 
   ;; Start mu4e in the background so that it syncs mail periodically
-  (mu4e t))
+  ;;(mu4e t)
+  )
 
 ;;(use-package mu4e-alert
 ;;  :after mu4e
