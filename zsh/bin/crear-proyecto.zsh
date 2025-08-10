@@ -20,8 +20,11 @@ if [[ -e "$project_name" ]]; then
 fi
 
 # Copiar y activar
-cp -r "$template" "$project_name"
+cp -aL -- "$template"/. "$project_name"/
 cd "$project_name" || exit 1
+
+# Normalizar permisos por si el template tenía algo raro
+chmod -R u=rwX,go=rX .
 
 # Activar direnv si está instalado
 if command -v direnv >/dev/null; then
