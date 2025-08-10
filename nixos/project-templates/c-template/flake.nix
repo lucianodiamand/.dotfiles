@@ -6,7 +6,18 @@
     flake-utils.lib.eachDefaultSystem (system:
       let pkgs = nixpkgs.legacyPackages.${system}; in {
         devShells.default = pkgs.mkShell {
-          packages = with pkgs; [ gcc gnumake ];
+          packages = with pkgs; [
+            gcc
+            gnumake
+            gdb
+            valgrind
+            clang-tools
+          ];
+
+          shellHook = ''
+            echo "Entorno C listo: gcc, make, gdb, valgrind"
+          '';
         };
       });
 }
+
