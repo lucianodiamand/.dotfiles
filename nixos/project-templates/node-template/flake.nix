@@ -7,6 +7,10 @@
       let pkgs = nixpkgs.legacyPackages.${system}; in {
         devShells.default = pkgs.mkShell {
           packages = with pkgs; [ nodejs_22 ];
+
+          shellHook = ''
+            echo "Recuerda cambiar el nombre en package.json"
+          '';
         };
       });
 }
