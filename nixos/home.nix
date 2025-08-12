@@ -538,14 +538,14 @@ in {
       Channel personal-gmail
       Far :personal-gmail-remote:
       Near :personal-gmail-local:
-      Patterns "INBOX" "Sent" "Drafts" "Trash" "Archive"
+      Patterns "INBOX" "[Gmail]/Borradores" "[Gmail]/Enviados" "[Gmail]/Papelera" "[Gmail]/Todos"
       Create Near
       Sync Pull
 
       Channel ips
       Far :ips-remote:
       Near :ips-local:
-      Patterns "INBOX" "Sent" "Drafts" "Trash" "Archive"
+      Patterns "INBOX" "[Gmail]/Borradores" "[Gmail]/Enviados" "[Gmail]/Papelera" "[Gmail]/Todos"
       Create Near
       Sync Pull
 
