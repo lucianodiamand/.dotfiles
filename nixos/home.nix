@@ -321,10 +321,10 @@ in {
 
     KEYFILE="$HOME/.ssh/arq-desa.server.key"
     if [ ! -f "$KEYFILE" ]; then
-      echo "Generating SSH key for arq desa..."
+      echo "Generating SSH key for arq desa server..."
       mkdir -p "$HOME/.ssh"
       chmod 700 "$HOME/.ssh"
-      ${pkgs.openssh}/bin/ssh-keygen -t ed25519 -f "$KEYFILE" -C "Arq desa" -N ""
+      ${pkgs.openssh}/bin/ssh-keygen -t ed25519 -f "$KEYFILE" -C "Arq desa server" -N ""
       chmod 600 "$KEYFILE"
     fi
   '';
