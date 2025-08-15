@@ -106,6 +106,7 @@ in {
     zathura
     testdisk
 
+    # presentation generation
     inkscape
     dia
 
