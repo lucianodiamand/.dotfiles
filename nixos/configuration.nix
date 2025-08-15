@@ -49,13 +49,15 @@
   # Enable CUPS to print documents.
   # services.printing.enable = true;
 
+  hardware.bluetooth.enable = true;
+
   # Enable sound.
-  # services.pulseaudio.enable = true;
-  # OR
-  # services.pipewire = {
-  #   enable = true;
-  #   pulse.enable = true;
-  # };
+  services.pipewire = {
+     enable = true;
+     alsa.enable = true;
+     alsa.support32Bit = true;
+     pulse.enable = true;
+  };
 
   # Enable touchpad support (enabled default in most desktopManager).
   # services.libinput.enable = true;
@@ -63,7 +65,7 @@
   # Define a user account. Don't forget to set a password with ‘passwd’.
   users.users.user = {
     isNormalUser = true;
-    extraGroups = [ "wheel" "dialout" "plugdev" "libvirtd" ];
+    extraGroups = [ "wheel" "dialout" "plugdev" "libvirtd" "audio" "video" ];
     shell = pkgs.zsh;
     #packages = with pkgs; [
     #  tree
@@ -81,7 +83,11 @@
     git
     zsh
     stow
-    pinentry-tty
+    pavucontrol
+    pamixer
+    pulseaudio
+    bluez
+    bluez-tools
   ];
 
   # Some programs need SUID wrappers, can be configured further or are
