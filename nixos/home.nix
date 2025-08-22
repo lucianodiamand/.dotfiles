@@ -310,6 +310,15 @@ in {
       ${pkgs.openssh}/bin/ssh-keygen -t ed25519 -f "$KEYFILE" -C "Personal Github repo" -N ""
       chmod 600 "$KEYFILE"
     fi
+
+    KEYFILE="$HOME/.ssh/arq-desa.server.key"
+    if [ ! -f "$KEYFILE" ]; then
+      echo "Generating SSH key for arq desa..."
+      mkdir -p "$HOME/.ssh"
+      chmod 700 "$HOME/.ssh"
+      ${pkgs.openssh}/bin/ssh-keygen -t ed25519 -f "$KEYFILE" -C "Arq desa" -N ""
+      chmod 600 "$KEYFILE"
+    fi
   '';
 
   home.file.".ssh/config".text = ''
@@ -325,6 +334,12 @@ in {
 
     Host github.com
       IdentityFile ~/.ssh/github.personal.repo.key
+
+    Host arqdesa
+      HostName 149.50.150.213
+      User root
+      IdentityFile ~/.ssh/arq-desa.server.key
+      Port 5961
   '';
 
   programs.git = {
