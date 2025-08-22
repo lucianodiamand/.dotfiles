@@ -13,7 +13,11 @@ in {
     i3
     i3status
     xss-lock
-    rxvt-unicode-unwrapped
+    (rxvt-unicode.override {
+      configure = { availablePlugins, ... }: {
+        plugins = with availablePlugins; [ perls font-size ];
+      };
+     })
     dmenu
     pkgs.nerd-fonts.hack
     neovim
