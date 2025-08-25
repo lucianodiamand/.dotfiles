@@ -1,0 +1,4 @@
+! Solarized Dark
+#include "/home/user/.Xresources.base"
+#include "/home/user/.Xresources.solarized-dark"
+

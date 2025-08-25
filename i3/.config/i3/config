@@ -46,6 +46,10 @@ bindsym XF86AudioLowerVolume exec --no-startup-id pactl set-sink-volume @DEFAULT
 bindsym XF86AudioMute exec --no-startup-id pactl set-sink-mute @DEFAULT_SINK@ toggle && $refresh_i3status
 bindsym XF86AudioMicMute exec --no-startup-id pactl set-source-mute @DEFAULT_SOURCE@ toggle && $refresh_i3status
 
+# Theme
+bindsym $mod+Shift+d exec --no-startup-id "xrdb -merge ~/.Xresources.d/solarized-dark"
+bindsym $mod+Shift+s exec --no-startup-id "xrdb -merge ~/.Xresources.d/solarized-light"
+
 # Screenshots
 bindsym Print exec --no-startup-id maim "/home/$USER/pictures/$(date)"
 bindsym $mod+Print exec --no-startup-id maim --window $(xdotool getactivewindow) "/home/$USER/pictures/$(date)"
