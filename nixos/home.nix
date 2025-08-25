@@ -144,7 +144,11 @@ in {
 
   fonts.fontconfig.enable = true;
 
-  home.file."bin".source = "${dotfiles}/zsh/bin";
+  home.file."bin" = {
+    source = dotfiles + /zsh/bin;
+    recursive = true;
+    force = true;
+  };
   home.file.".project-templates".source = "${dotfiles}/nixos/project-templates";
 
   home.sessionPath = [
