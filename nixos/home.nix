@@ -27,11 +27,17 @@ in {
     (pkgs.writeShellScriptBin "vim" ''
       exec nvim "$@"
     '')
+
+    # email
     mu
     isync
     msmtp
+
     evince
+
+    # browsers
     firefox
+
     home-manager
     networkmanagerapplet
     gnupg
@@ -140,6 +146,9 @@ in {
     # java
     pkgs.jdk21
     jdt-language-server
+
+    # ofimatica
+    libreoffice
   ];
 
   fonts.fontconfig.enable = true;
