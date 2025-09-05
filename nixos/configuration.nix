@@ -21,6 +21,10 @@
   networking.firewall.allowedTCPPorts = [ 9555 ]; # tu puerto SSH
   # Pick only one of the below networking options.
   # networking.wireless.enable = true;  # Enables wireless support via wpa_supplicant.
+  networking.extraHosts = ''
+    192.168.122.233	seminario3
+    192.168.122.162	linux-embedded
+  '';
 
   # Set your time zone.
   time.timeZone = "America/Argentina/Buenos_Aires";
