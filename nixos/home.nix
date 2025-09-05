@@ -368,6 +368,11 @@ in {
       User root
       IdentityFile ~/.ssh/arq-desa.server.key
       Port 5961
+
+    Host sunde
+      HostName 192.168.122.191
+      HostKeyAlgorithms +ssh-rsa
+      PubkeyAcceptedAlgorithms +ssh-rsa
   '';
 
   programs.git = {
