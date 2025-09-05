@@ -22,8 +22,10 @@
   # Pick only one of the below networking options.
   # networking.wireless.enable = true;  # Enables wireless support via wpa_supplicant.
   networking.extraHosts = ''
+    # vms
     192.168.122.233	seminario3
     192.168.122.162	linux-embedded
+    192.168.122.191	sunde
   '';
 
   # Set your time zone.
