@@ -35,6 +35,15 @@
 
 (set-face-attribute 'default nil :font "Hack Nerd Font Mono" :height 110)
 
+;; Zoom por buffer
+(global-set-key (kbd "<C-up>")   #'text-scale-increase)
+(global-set-key (kbd "<C-down>") #'text-scale-decrease)
+
+;; Reset del zoom
+(defun my/text-scale-reset () (interactive) (text-scale-set 0))
+(global-set-key (kbd "C-0") #'my/text-scale-reset)
+(setq text-scale-mode-step 1.0)
+
 ;; Load pertinent modules
 (require 'ldd-straight)
 (require 'ldd-settings)
