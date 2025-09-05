@@ -373,6 +373,7 @@ in {
       HostName 192.168.122.191
       HostKeyAlgorithms +ssh-rsa
       PubkeyAcceptedAlgorithms +ssh-rsa
+      SetEnv TERM=rxvt
   '';
 
   programs.git = {
