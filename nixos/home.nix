@@ -132,6 +132,7 @@ in {
 
     # utils
     screenkey
+    file
 
     # databases
     dbeaver-bin
