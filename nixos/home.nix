@@ -150,6 +150,9 @@ in {
 
     # ofimatica
     libreoffice
+
+    # man pages
+    man-pages
   ];
 
   fonts.fontconfig.enable = true;
