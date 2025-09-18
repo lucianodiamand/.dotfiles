@@ -18,7 +18,6 @@
 
   networking.hostName = "io"; # Define your hostname.
   networking.networkmanager.enable = true;
-  networking.firewall.allowedTCPPorts = [ 9555 ]; # tu puerto SSH
   # Pick only one of the below networking options.
   # networking.wireless.enable = true;  # Enables wireless support via wpa_supplicant.
   networking.extraHosts = ''
@@ -44,7 +43,23 @@
     "d     /srv/tftp   0755  nobody nogroup  -   -"
   ];
 
-  networking.firewall.allowedUDPPorts = [ 69 ];
+  fileSystems."/export/data" = {
+    device = "/srv/data";
+    options = [ "bind" ];
+  };
+
+  services.nfs.server = {
+    enable = true;
+    exports = ''
+      /export         192.168.7.0/24(ro,fsid=0,no_subtree_check,crossmnt,sec=sys)
+      /export/data    192.168.7.0/24(rw,no_subtree_check,nohide,sec=sys,sync)
+    '';
+  };
+
+  networking.firewall = {
+    allowedTCPPorts = [ 2049 9555 ];
+    allowedUDPPorts = [ 69 2049 ];
+  };
 
   # Select internationalisation properties.
   # i18n.defaultLocale = "en_US.UTF-8";
