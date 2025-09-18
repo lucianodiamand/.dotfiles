@@ -35,6 +35,17 @@
   # networking.proxy.default = "http://user:password@proxy:port/";
   # networking.proxy.noProxy = "127.0.0.1,localhost,internal.domain";
 
+  services.tftpd.enable = true;
+  services.tftpd.path = "/srv/tftp";
+
+  # Crea la carpeta y fija permisos/propietario en cada arranque o switch
+  systemd.tmpfiles.rules = [
+    # type path        mode  user   group    age arg
+    "d     /srv/tftp   0755  nobody nogroup  -   -"
+  ];
+
+  networking.firewall.allowedUDPPorts = [ 69 ];
+
   # Select internationalisation properties.
   # i18n.defaultLocale = "en_US.UTF-8";
   # console = {
