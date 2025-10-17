@@ -50,6 +50,7 @@ in {
     meld
     fd
     gcc
+    gcc.man
     (pkgs.nodePackages.typescript-language-server)
     (pkgs.nodePackages.typescript)
     lua-language-server
@@ -108,7 +109,13 @@ in {
 
     # eca tools
     kicad
+
+    # terminal tools
     picocom
+    minicom
+    lrzsz
+    srecord
+
     arduino
 
     dosfstools
