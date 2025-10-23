@@ -61,8 +61,9 @@
      :trash "/fceia/Trash"
      :archive "/fceia/Archive")))
 
-(global-set-key (kbd "C-c i") #'ldd/go-to-inbox)
-(global-set-key (kbd "C-c c") #'mu4e-context-switch)
+(global-set-key (kbd "C-c m i") #'ldd/go-to-inbox)
+(global-set-key (kbd "C-c m c") #'mu4e-context-switch)
+(global-set-key (kbd "C-c m C") #'ldd/mu4e-context-switch-and-show-inbox)
 
 ;; Definir consultas personalizadas
 (defvar ldd/mu4e-inbox-query
@@ -401,8 +402,6 @@
 
   ;;(setq ldd/mu4e-inbox-query
   ;;      "(maildir:/Fastmail/INBOX) AND flag:unread")
-
-  (global-set-key (kbd "C-c c") #'ldd/mu4e-context-switch-and-show-inbox)
 
   ;; Start mu4e in the background so that it syncs mail periodically
   ;;(mu4e t)
