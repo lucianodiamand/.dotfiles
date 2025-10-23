@@ -62,6 +62,7 @@
 (require 'ldd-gpt)
 
 (require 'ldd-mail)
+(require 'ldd-org-gtd)
 
 (custom-set-faces
  ;; custom-set-faces was added by Custom.

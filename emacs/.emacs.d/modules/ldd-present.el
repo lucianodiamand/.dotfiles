@@ -56,4 +56,8 @@
               ("C-c C-j" . ldd/org-present-next)
               ("C-c C-k" . ldd/org-present-prev)))
 
+(with-eval-after-load 'org
+  (define-key org-mode-map (kbd "C-c P") #'org-present)
+  (define-key org-mode-map (kbd "C-c q") #'org-present-quit))
+
 (provide 'ldd-present)
