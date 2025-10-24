@@ -160,6 +160,11 @@ in {
 
     # man pages
     man-pages
+
+    # programming tools
+    universal-ctags
+    cscope
+    entr
   ];
 
   fonts.fontconfig.enable = true;
@@ -320,6 +325,9 @@ in {
 
     mkdir -p ~/Documents
     mkdir -p ~/Downloads
+
+    mkdir -p ~/org1/roam
+    mkdir -p ~/org1/roam/{projects,tasks,notes,meetings,versions,dailies,slides,labs}
   '';
 
   home.activation.generateHostingerKey = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
