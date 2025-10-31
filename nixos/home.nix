@@ -286,6 +286,7 @@ in {
   home.file.".emacs.d/modules/ldd-gpt.el".source = "${dotfiles}/emacs/.emacs.d/modules/ldd-gpt.el";
   home.file.".emacs.d/modules/ldd-mail.el".source = "${dotfiles}/emacs/.emacs.d/modules/ldd-mail.el";
   home.file.".emacs.d/modules/ldd-org-gtd.el".source = "${dotfiles}/emacs/.emacs.d/modules/ldd-org-gtd.el";
+  home.file.".emacs.d/modules/ldd-present.el".source = "${dotfiles}/emacs/.emacs.d/modules/ldd-present.el";
 
   # nvim
   home.file.".config/nvim/init.lua".source = "${dotfiles}/nvim/.config/nvim/init.lua";

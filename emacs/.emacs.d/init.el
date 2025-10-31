@@ -63,6 +63,7 @@
 
 (require 'ldd-mail)
 (require 'ldd-org-gtd)
+(require 'ldd-present)
 
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
