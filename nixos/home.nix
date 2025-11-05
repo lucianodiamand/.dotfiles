@@ -98,6 +98,7 @@ in {
     wavemon
     nmap
     dig
+    inetutils
 
     openfortivpn
 
