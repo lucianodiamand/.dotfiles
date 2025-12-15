@@ -58,6 +58,7 @@
 (require 'ldd-typescript)
 (require 'ldd-scheme)
 ;;(require 'ldd-lua)
+(require 'ldd-angular)
 
 (require 'ldd-gpt)
 
