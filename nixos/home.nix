@@ -166,6 +166,9 @@ in {
     universal-ctags
     cscope
     entr
+
+    # forensics
+    ghidra-bin
   ];
 
   fonts.fontconfig.enable = true;
@@ -283,6 +286,7 @@ in {
   home.file.".emacs.d/modules/ldd-android.el".source = "${dotfiles}/emacs/.emacs.d/modules/ldd-android.el";
   home.file.".emacs.d/modules/ldd-scheme.el".source = "${dotfiles}/emacs/.emacs.d/modules/ldd-scheme.el";
   #home.file.".emacs.d/modules/ldd-lua.el".source = "${dotfiles}/emacs/.emacs.d/modules/ldd-lua.el";
+  home.file.".emacs.d/modules/ldd-angular.el".source = "${dotfiles}/emacs/.emacs.d/modules/ldd-angular.el";
   home.file.".emacs.d/modules/ldd-typescript.el".source = "${dotfiles}/emacs/.emacs.d/modules/ldd-typescript.el";
   home.file.".emacs.d/modules/ldd-gpt.el".source = "${dotfiles}/emacs/.emacs.d/modules/ldd-gpt.el";
   home.file.".emacs.d/modules/ldd-mail.el".source = "${dotfiles}/emacs/.emacs.d/modules/ldd-mail.el";
@@ -328,8 +332,7 @@ in {
     mkdir -p ~/Documents
     mkdir -p ~/Downloads
 
-    mkdir -p ~/org1/roam
-    mkdir -p ~/org1/roam/{projects,tasks,notes,meetings,versions,dailies,slides,labs}
+    mkdir -p ~/org/roam/{projects,tasks,notes,meetings,versions,dailies,slides,labs}
   '';
 
   home.activation.generateHostingerKey = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
