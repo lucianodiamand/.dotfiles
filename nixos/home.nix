@@ -74,6 +74,7 @@ in {
     unzip
     udisks2
     smartmontools
+    usbutils 
 
     # editors
     ed
