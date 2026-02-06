@@ -145,7 +145,7 @@ in {
 
     # databases
     dbeaver-bin
-    mysql-client
+    mariadb.client
 
     # rust dev
     cargo
@@ -188,7 +188,7 @@ in {
   home.sessionVariables = {
     EDITOR = "vi";
     VISUAL = "vi";
-    LD_LIBRARY_PATH = "$HOME/.oracle/instantclient_23_8";
+    INSTANT_CLIENT_PATH = "$HOME/.oracle/instantclient_23_8";
   };
 
   # Incluye el archivo real de i3 desde tu estructura actual
