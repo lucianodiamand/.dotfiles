@@ -32,3 +32,6 @@ To install packer:
 To install run:
 ```stow i3 i3status nvim alacrity fish bin emacs jfortivpn rxvt bat```
 
+# Nixos
+
+```home-manager switch --flake ./nixos```
