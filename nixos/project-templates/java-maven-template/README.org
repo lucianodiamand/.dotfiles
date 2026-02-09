@@ -1,0 +1,12 @@
+#+title: Maven Java Project
+#+author: Luciano Daniel Diamand
+#+email: lucianodiamand@gmail.com
+
+* Maven Java Project
+
+** Execute
+
+#+begin_src bash
+mvn exec:java
+#+end_src
+
