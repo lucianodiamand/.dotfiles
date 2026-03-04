@@ -19,17 +19,17 @@
         ("ref" . ?r) ("nota" . ?n) ("proyecto" . ?j) ("reunion" . ?m)))
 
 ;; === Agenda: tus carpetas clave ===
-(setq org-agenda-files '("~/org/roam/proyectos/"
-                         "~/org/roam/versiones/"
-                         "~/org/roam/tareas/"
-                         "~/org/roam/reuniones/"
+(setq org-agenda-files '("~/org/roam/projects/"
+                         "~/org/roam/versions/"
+                         "~/org/roam/tasks/"
+                         "~/org/roam/meetings/"
                          "~/org/roam/dailies/"))
 
 ;; === Refile: enviar items a Proyectos/Tareas/Notas ===
 (setq org-refile-targets
-      '(("~/org/roam/proyectos" :maxlevel . 3)
-        ("~/org/roam/tareas"    :maxlevel . 2)
-        ("~/org/roam/notas"     :maxlevel . 2)))
+      '(("~/org/roam/projects" :maxlevel . 3)
+        ("~/org/roam/tasks"    :maxlevel . 2)
+        ("~/org/roam/notes"     :maxlevel . 2)))
 (setq org-outline-path-complete-in-steps nil
       org-refile-use-outline-path t)
 

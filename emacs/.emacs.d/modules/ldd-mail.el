@@ -69,9 +69,30 @@
 (defvar ldd/mu4e-inbox-query
   "maildir:/personal-gmail/Inbox OR maildir:/ips/Inbox OR maildir:/thelabtech/Inbox OR maildir:/yahoo/Inbox OR maildir:/frro/Inbox OR maildir:/fceia/Inbox")
 
+(defvar ldd/mu4e-go-to-inbox-after-update nil
+  "Si es non-nil, al terminar de indexar vuelve a abrir el inbox.")
+
+(defun ldd/mu4e-open-inbox-after-index ()
+  "Hook: al terminar de indexar, refrescar la vista del inbox."
+  (when ldd/mu4e-go-to-inbox-after-update
+    (setq ldd/mu4e-go-to-inbox-after-update nil)
+    (mu4e-headers-search ldd/mu4e-inbox-query)))
+
+(add-hook 'mu4e-index-updated-hook #'ldd/mu4e-open-inbox-after-index)
+
 (defun ldd/go-to-inbox ()
+  "Abrir inbox (lo ya indexado) y actualizar en segundo plano."
   (interactive)
-  (mu4e-headers-search ldd/mu4e-inbox-query))
+  ;; 1) abrir mu4e si no está corriendo
+  (unless (and (boundp 'mu4e--server-props) mu4e--server-props)
+    (mu4e))
+
+  ;; 2) mostrar lo que hay ahora
+  (mu4e-headers-search ldd/mu4e-inbox-query)
+
+  ;; 3) actualizar en background y refrescar al terminar
+  (setq ldd/mu4e-go-to-inbox-after-update t)
+  (mu4e-update-mail-and-index t))
 
 (defun ldd/load-and-process-aliases ()
   "Cargar y procesar aliases correctamente para mu4e"
