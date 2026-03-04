@@ -1,0 +1,170 @@
+#!/usr/bin/env bash
+set -euo pipefail
+source ./poc-config.sh
+
+SSH_OPTS="-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null"
+strip_cidr(){ echo "$1" | cut -d/ -f1; }
+CP_IP="$(strip_cidr "$CP1_IP")"
+
+ssh $SSH_OPTS "${CI_USER}@${CP_IP}" 'set -euo pipefail
+export KUBECONFIG=/etc/rancher/k3s/k3s.yaml
+
+kubectl create ns observability >/dev/null 2>&1 || true
+
+# Helm repos
+helm repo add grafana https://grafana.github.io/helm-charts >/dev/null 2>&1 || true
+helm repo update >/dev/null
+
+########################
+# Tempo (Grafana Tempo)
+########################
+
+# Si existe y no está deployed, lo limpiamos.
+TEMPO_STATUS="$(helm -n observability status tempo 2>/dev/null | awk "/^STATUS:/{print \$2}" || true)"
+if [ -n "$TEMPO_STATUS" ] && [ "$TEMPO_STATUS" != "deployed" ]; then
+  echo "[!] tempo status=$TEMPO_STATUS -> uninstall para limpiar"
+  helm -n observability uninstall tempo >/dev/null 2>&1 || true
+fi
+
+set +e
+helm upgrade --install tempo grafana/tempo -n observability \
+  --set tempo.storage.trace.backend=local \
+  --set tempo.receivers.otlp.protocols.grpc.endpoint=0.0.0.0:4317 \
+  --set tempo.receivers.otlp.protocols.http.endpoint=0.0.0.0:4318 \
+  --set tempo.memBallastSizeMbs=128 \
+  --set tempo.resources.requests.cpu=100m \
+  --set tempo.resources.requests.memory=512Mi \
+  --set tempo.resources.limits.memory=1Gi \
+  --wait --timeout 30m
+RC=$?
+set -e
+
+if [ "$RC" -ne 0 ]; then
+  echo
+  echo "[!] Tempo no quedó Ready (helm rc=$RC). Dump de diagnóstico:"
+  echo "== helm status tempo =="; helm -n observability status tempo || true; echo
+  echo "== workloads tempo (deploy/sts) =="; kubectl get deploy,sts -n observability -l app.kubernetes.io/instance=tempo -o wide || true; echo
+  echo "== pods tempo =="; kubectl get pods -n observability -l app.kubernetes.io/instance=tempo -o wide || true; echo
+  echo "== describe pods tempo =="; kubectl describe pod -n observability -l app.kubernetes.io/instance=tempo || true; echo
+  echo "== logs tempo (últimas 200 líneas) =="; kubectl logs -n observability -l app.kubernetes.io/instance=tempo --all-containers --tail=200 || true; echo
+  echo "== logs tempo (previous) (últimas 200 líneas) =="; kubectl logs -n observability -l app.kubernetes.io/instance=tempo --all-containers --previous --tail=200 || true; echo
+  echo "== últimos eventos observability (80) =="; kubectl get events -n observability --sort-by=.lastTimestamp | tail -n 80 || true; echo
+  exit "$RC"
+fi
+
+# Asegurar rollout del STS tempo
+kubectl rollout status -n observability statefulset/tempo --timeout=15m
+
+#################################
+# OpenTelemetry Collector (OTLP)
+#################################
+
+# ¿Ya existía? (para decidir restart)
+OTEL_EXISTS=0
+kubectl -n observability get deploy otel-collector >/dev/null 2>&1 && OTEL_EXISTS=1 || true
+
+cat <<EOF | kubectl apply -n observability -f -
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: otel-collector-config
+data:
+  config.yaml: |
+    receivers:
+      otlp:
+        protocols:
+          grpc:
+            endpoint: 0.0.0.0:4317
+          http:
+            endpoint: 0.0.0.0:4318
+
+    processors:
+      batch:
+
+    exporters:
+      otlp/tempo:
+        endpoint: tempo.observability.svc.cluster.local:4317
+        tls:
+          insecure: true
+      debug:
+        verbosity: basic
+
+    service:
+      pipelines:
+        traces:
+          receivers: [otlp]
+          processors: [batch]
+          exporters: [otlp/tempo, debug]
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: otel-collector
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: otel-collector
+  template:
+    metadata:
+      labels:
+        app: otel-collector
+    spec:
+      containers:
+      - name: otel-collector
+        image: otel/opentelemetry-collector:0.120.0
+        args: ["--config=/conf/config.yaml"]
+        ports:
+        - name: otlp-grpc
+          containerPort: 4317
+        - name: otlp-http
+          containerPort: 4318
+        volumeMounts:
+        - name: conf
+          mountPath: /conf
+      volumes:
+      - name: conf
+        configMap:
+          name: otel-collector-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: otel-collector
+spec:
+  selector:
+    app: otel-collector
+  ports:
+  - name: otlp-grpc
+    port: 4317
+    targetPort: 4317
+  - name: otlp-http
+    port: 4318
+    targetPort: 4318
+EOF
+
+if [ "$OTEL_EXISTS" -eq 1 ]; then
+  kubectl -n observability rollout restart deploy/otel-collector
+fi
+
+set +e
+kubectl rollout status -n observability deploy/otel-collector --timeout=15m
+RC=$?
+set -e
+
+if [ "$RC" -ne 0 ]; then
+  echo
+  echo "[!] OTel Collector no quedó Ready (rc=$RC). Dump de diagnóstico:"
+  echo "== pods otel-collector =="; kubectl get pods -n observability -l app=otel-collector -o wide || true; echo
+  echo "== describe pod otel-collector =="; kubectl describe pod -n observability -l app=otel-collector | tail -n 120 || true; echo
+  echo "== logs otel-collector (últimas 200 líneas) =="; kubectl logs -n observability -l app=otel-collector --all-containers --tail=200 || true; echo
+  echo "== logs otel-collector (previous) (últimas 200 líneas) =="; kubectl logs -n observability -l app=otel-collector --all-containers --previous --tail=200 || true; echo
+  echo "== últimos eventos observability (80) =="; kubectl get events -n observability --sort-by=.lastTimestamp | tail -n 80 || true; echo
+  exit "$RC"
+fi
+
+echo
+kubectl get pods -n observability -o wide | egrep "tempo|otel" || true
+echo "[✓] Tempo + OTel Collector installed"
+'
+

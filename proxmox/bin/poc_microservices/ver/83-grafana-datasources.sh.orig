@@ -1,0 +1,90 @@
+#!/usr/bin/env bash
+set -euo pipefail
+source ./poc-config.sh
+
+SSH_OPTS="-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null"
+strip_cidr(){ echo "$1" | cut -d/ -f1; }
+CP_IP="$(strip_cidr "$CP1_IP")"
+
+ssh $SSH_OPTS "${CI_USER}@${CP_IP}" 'set -euo pipefail
+export KUBECONFIG=/etc/rancher/k3s/k3s.yaml
+
+# ---- OTel Collector: bind 0.0.0.0 (GRPC/HTTP) ----
+cat <<EOF | kubectl apply -n observability -f -
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: otel-collector-config
+data:
+  config.yaml: |
+    receivers:
+      otlp:
+        protocols:
+          grpc:
+            endpoint: 0.0.0.0:4317
+          http:
+            endpoint: 0.0.0.0:4318
+
+    processors:
+      batch:
+
+    exporters:
+      otlp/tempo:
+        endpoint: tempo.observability.svc.cluster.local:4317
+        tls:
+          insecure: true
+      logging:
+        loglevel: info
+
+    service:
+      pipelines:
+        traces:
+          receivers: [otlp]
+          processors: [batch]
+          exporters: [otlp/tempo, logging]
+EOF
+
+kubectl -n observability rollout restart deploy/otel-collector
+kubectl -n observability rollout status deploy/otel-collector --timeout=300s
+
+# ---- Grafana datasources (Loki + Tempo) ----
+cat <<EOF | kubectl apply -n observability -f -
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-datasources
+  labels:
+    grafana_datasource: "1"
+data:
+  datasources.yaml: |
+    apiVersion: 1
+    datasources:
+      - name: Loki
+        uid: loki
+        type: loki
+        access: proxy
+        url: http://loki.observability.svc.cluster.local:3100
+        isDefault: false
+
+      - name: Tempo
+        uid: tempo
+        type: tempo
+        access: proxy
+        url: http://tempo.observability.svc.cluster.local:3200
+        isDefault: false
+        jsonData:
+          tracesToLogs:
+            datasourceUid: loki
+            filterByTraceID: true
+            filterBySpanID: false
+            spanStartTimeShift: "5m"
+            spanEndTimeShift: "5m"
+            tags: ["service.name", "k8s.namespace.name"]
+EOF
+
+kubectl -n observability rollout restart deploy/kps-grafana
+kubectl -n observability rollout status deploy/kps-grafana --timeout=300s
+
+echo "[✓] OTel bind fixed + Grafana datasources applied"
+'
+

@@ -1,0 +1,66 @@
+#!/usr/bin/env bash
+set -euo pipefail
+source ./poc-config.sh
+
+SSH_OPTS="-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null"
+strip_cidr(){ echo "$1" | cut -d/ -f1; }
+CP_IP="$(strip_cidr "$CP1_IP")"
+
+ssh $SSH_OPTS "${CI_USER}@${CP_IP}" 'set -euo pipefail
+export KUBECONFIG=/etc/rancher/k3s/k3s.yaml
+
+# Datasources (Loki + Tempo)
+cat <<EOF | kubectl apply -n observability -f -
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-datasources
+  labels:
+    grafana_datasource: "1"
+data:
+  datasources.yaml: |
+    apiVersion: 1
+    datasources:
+      - name: Loki
+        uid: loki
+        type: loki
+        access: proxy
+        url: http://loki.observability.svc.cluster.local:3100
+        isDefault: false
+
+      - name: Tempo
+        uid: tempo
+        type: tempo
+        access: proxy
+        url: http://tempo.observability.svc.cluster.local:3200
+        isDefault: false
+        jsonData:
+          tracesToLogs:
+            datasourceUid: loki
+            filterByTraceID: true
+            filterBySpanID: false
+            spanStartTimeShift: "5m"
+            spanEndTimeShift: "5m"
+            tags: ["service.name", "k8s.namespace.name"]
+EOF
+
+# Reiniciar Grafana para que el sidecar re-escanee / cargue (PoC-friendly)
+kubectl -n observability rollout restart deploy/kps-grafana
+
+set +e
+kubectl -n observability rollout status deploy/kps-grafana --timeout=15m
+RC=$?
+set -e
+
+if [ "$RC" -ne 0 ]; then
+  echo
+  echo "[!] Grafana no terminó rollout (rc=$RC). Dump:"
+  echo "== pods grafana =="; kubectl get pods -n observability -l app.kubernetes.io/name=grafana -o wide || true; echo
+  echo "== describe grafana =="; kubectl describe pod -n observability -l app.kubernetes.io/name=grafana | tail -n 120 || true; echo
+  echo "== eventos observability =="; kubectl get events -n observability --sort-by=.lastTimestamp | tail -n 80 || true; echo
+  exit "$RC"
+fi
+
+echo "[✓] Grafana datasources applied"
+'
+
