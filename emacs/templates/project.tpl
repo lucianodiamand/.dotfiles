@@ -2,7 +2,7 @@
 #+filetags: :project:backend:frontend:infra:
 
 * Overview
-- Owner: %^{Owner}p
+- Owner: %^{Owner}
 - Status: %^{Status|IDEA|ACTIVE|ON_HOLD|DONE|CANCELLED}
 - GitHub: %^{GitHub URL}
 - VPN: %^{VPN (name / client / notes)}
