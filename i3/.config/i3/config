@@ -27,6 +27,10 @@ gaps inner 2
 # https://wiki.archlinux.org/index.php/XDG_Autostart
 exec --no-startup-id dex --autostart --environment i3
 
+exec --no-startup-id sh -lc 'cat $(command -v dmenu) >/dev/null'
+exec --no-startup-id sh -lc 'dmenu_path >/dev/null'
+exec --no-startup-id sh -lc 'fc-match monospace >/dev/null 2>&1 || true'
+
 # The combination of xss-lock, nm-applet and pactl is a popular choice, so
 # they are included here as an example. Modify as you see fit.
 
