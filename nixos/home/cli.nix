@@ -1,0 +1,45 @@
+{ config, pkgs, lib, ... }:
+
+{
+  home.packages = with pkgs; [
+    bat
+    tig
+    zoxide
+    tldr
+    eza
+    fzf
+    ripgrep
+    fd
+    xclip
+    wipe
+    fdupes
+    unzip
+    udisks2
+    smartmontools
+    usbutils
+    btop
+    git-filter-repo
+    html2text
+    scalpel
+    gobuster
+    xorriso
+    binwalk
+    wget
+    tcpdump
+    ethtool
+    wavemon
+    nmap
+    dig
+    inetutils
+    openfortivpn
+    w3m
+    picocom
+    minicom
+    lrzsz
+    srecord
+    dosfstools
+    testdisk
+    file
+    jq
+  ];
+}
