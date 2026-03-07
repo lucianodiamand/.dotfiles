@@ -68,6 +68,5 @@ in {
 
   home.file.".ssh/config" = {
     source = config.sops.templates.ssh_config.path;
-    mode = "0600";
   };
 }

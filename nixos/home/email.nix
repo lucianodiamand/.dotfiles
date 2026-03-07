@@ -13,12 +13,10 @@
 
   home.file.".msmtprc" = {
     source = config.sops.templates.msmtprc.path;
-    mode = "0600";
   };
 
   # Deploy the isync configuration file.
   home.file.".mbsyncrc" = {
     source = config.sops.templates.mbsyncrc.path;
-    mode = "0600";
   };
 }
