@@ -15,7 +15,7 @@
     };
 
     secrets = {
-      url = "path:/home/user/.dotfiles-secrets";
+      url = "path:./secrets";
       flake = false;
     };
 
