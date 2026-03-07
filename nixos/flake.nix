@@ -14,10 +14,15 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
+    secrets = {
+      url = "path:/home/user/.dotfiles-secrets";
+      flake = false;
+    };
+
     rcmd.url = "github:lucianodiamand/rcmd";
   };
 
-  outputs = { nixpkgs, home-manager, sops-nix, rcmd, ... }:
+  outputs = { nixpkgs, home-manager, sops-nix, secrets, rcmd, ... }:
     let
       system = "x86_64-linux";
       pkgs = import nixpkgs {
@@ -31,7 +36,7 @@
           ./home.nix
         ];
         extraSpecialArgs = {
-          inherit rcmd;
+          inherit rcmd secrets;
         };
       };
     };

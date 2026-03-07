@@ -1,8 +1,8 @@
-{ config, pkgs, lib, ... }:
+{ config, pkgs, lib, secrets, ... }:
 
 {
   sops = {
-    defaultSopsFile = "${config.home.homeDirectory}/.dotfiles-secrets/home.sops.yaml";
+    defaultSopsFile = "${secrets}/home.sops.yaml";
     age.keyFile = "${config.home.homeDirectory}/.config/sops/age/keys.txt";
     secrets = {
       email_personal_gmail = {};
