@@ -9,10 +9,15 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
+    sops-nix = {
+      url = "github:Mic92/sops-nix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
     rcmd.url = "github:lucianodiamand/rcmd";
   };
 
-  outputs = { nixpkgs, home-manager, rcmd, ... }:
+  outputs = { nixpkgs, home-manager, sops-nix, rcmd, ... }:
     let
       system = "x86_64-linux";
       pkgs = import nixpkgs {
@@ -22,6 +27,7 @@
       homeConfigurations.user = home-manager.lib.homeManagerConfiguration {
         inherit pkgs;
         modules = [
+          sops-nix.homeManagerModules.sops
           ./home.nix
         ];
         extraSpecialArgs = {
@@ -30,4 +36,3 @@
       };
     };
 }
-

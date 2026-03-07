@@ -7,6 +7,7 @@
     ./home/editors.nix
     ./home/browsers.nix
     ./home/email.nix
+    ./home/secrets.nix
     ./home/shell.nix
     ./home/security.nix
     ./home/git.nix

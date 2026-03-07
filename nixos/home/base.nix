@@ -48,12 +48,13 @@ in {
   '';
 
   home.activation.createDirs = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
-    mkdir -p ~/.mail/personal-gmail
-    mkdir -p ~/.mail/thelabtech
-    mkdir -p ~/.mail/fceia
-    mkdir -p ~/.mail/yahoo
-    mkdir -p ~/.mail/frro
-    mkdir -p ~/.mail/ips
+    MAIL_ROOT="$(cat ${config.sops.secrets.mail_root.path})"
+    mkdir -p "$MAIL_ROOT/personal-gmail"
+    mkdir -p "$MAIL_ROOT/thelabtech"
+    mkdir -p "$MAIL_ROOT/fceia"
+    mkdir -p "$MAIL_ROOT/yahoo"
+    mkdir -p "$MAIL_ROOT/frro"
+    mkdir -p "$MAIL_ROOT/ips"
 
     mkdir -p ~/dev
 

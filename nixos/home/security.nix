@@ -4,11 +4,13 @@ let
   pass-otp = pkgs.pass.withExtensions (e: [ e.pass-otp ]);
 in {
   home.packages = with pkgs; [
+    age
     gnupg
     pass-otp
     pinentry-gtk2
     openssh
     cryptsetup
+    sops
   ];
 
   # Configuracion de GnuPG
@@ -64,30 +66,8 @@ in {
     fi
   '';
 
-  home.file.".ssh/config".text = ''
-    Host bitbucket-l2
-      HostName bitbucket.org
-      IdentityFile ~/.ssh/bitbucket.l2.repo.key
-      IdentitiesOnly yes
-
-    Host cptprod
-      HostName 179.43.117.86
-      IdentityFile ~/.ssh/cpt-prod.server.key
-      Port 4626
-
-    Host github.com
-      IdentityFile ~/.ssh/github.personal.repo.key
-
-    Host arqdesa
-      HostName 149.50.150.213
-      User root
-      IdentityFile ~/.ssh/arq-desa.server.key
-      Port 5961
-
-    Host sunde
-      HostName 192.168.122.191
-      HostKeyAlgorithms +ssh-rsa
-      PubkeyAcceptedAlgorithms +ssh-rsa
-      SetEnv TERM=rxvt
-  '';
+  home.file.".ssh/config" = {
+    source = config.sops.templates.ssh_config.path;
+    mode = "0600";
+  };
 }

@@ -13,23 +13,9 @@
     };
   };
 
-  home.file."/home/user/.config/git/gitconfig-thelabtech".text = ''
-    [user]
-      name = Luciano Daniel Diamand
-      email = luciano.diamand@thelabtech.com.ar
-    [color]
-      ui = always
-  '';
+  home.file."/home/user/.config/git/gitconfig-thelabtech".source = config.sops.templates.gitconfig_thelabtech.path;
 
-  home.file."/home/user/.config/git/gitconfig-aus".text = ''
-    [user]
-      name = Luciano Daniel Diamand
-      email = lucianodiamand@gmail.com
-  '';
+  home.file."/home/user/.config/git/gitconfig-aus".source = config.sops.templates.gitconfig_aus.path;
 
-  home.file."/home/user/.config/git/gitconfig-personal".text = ''
-    [user]
-      name = Luciano Daniel Diamand
-      email = lucianodiamand@gmail.com
-  '';
+  home.file."/home/user/.config/git/gitconfig-personal".source = config.sops.templates.gitconfig_personal.path;
 }
