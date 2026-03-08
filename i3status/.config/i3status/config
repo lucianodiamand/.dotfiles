@@ -18,12 +18,12 @@ order += "memory"
 order += "tztime local"
 
 wireless wlp3s0 {
-        format_up = "%ip (%bitrate,%quality @ %essid)"
+        format_up = "%bitrate,%quality @ %essid"
         format_down = ""
 }
 
 ethernet enp0s25 {
-        format_up = "%ip (%speed)"
+        format_up = "%speed"
         format_down = ""
 }
 
