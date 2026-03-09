@@ -206,6 +206,9 @@ in {
 
   # btop config
   home.file.".config/btop/btop.conf".source = "${dotfiles}/btop/.config/btop/btop.conf";
+ 
+  # w3m config
+  home.file.".w3m/config".source = "${dotfiles}/w3m/.w3m/config";
 
   home.file.".Xresources.d" = {
     source = "${dotfiles}/rxvt/.Xresources.d";  # carpeta en tu repo
