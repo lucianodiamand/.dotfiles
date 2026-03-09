@@ -254,6 +254,7 @@ in {
 
   programs.zsh = {
     enable = true;
+    autocd = false;
     oh-my-zsh = {
       enable = true;
       theme = "bira";
