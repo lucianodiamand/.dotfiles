@@ -18,7 +18,7 @@ order += "memory"
 order += "tztime local"
 
 wireless wlp3s0 {
-        format_up = "%bitrate,%quality @ %essid"
+        format_up = "%bitrate,%quality @%essid"
         format_down = ""
 }
 
