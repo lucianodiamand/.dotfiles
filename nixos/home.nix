@@ -204,6 +204,9 @@ in {
   # bat config
   home.file.".config/bat/config".source = "${dotfiles}/bat/.config/bat/config";
 
+  # btop config
+  home.file.".config/btop/btop.conf".source = "${dotfiles}/btop/.config/btop/btop.conf";
+
   home.file.".Xresources.d" = {
     source = "${dotfiles}/rxvt/.Xresources.d";  # carpeta en tu repo
     recursive = true;   # gestiona todo el árbol
