@@ -1,0 +1,42 @@
+* dotfiles
+My personal dot files.
+
+* Dependencies
+** Nerd fonts
+Download the fonts:
+#+begin_src sh
+wget -c https://github.com/ryanoasis/nerd-fonts/releases/download/v3.2.1/Hack.zip -P /tmp
+#+end_src
+
+Uncompress in directory: ./local/share/fonts
+
+Run:
+#+begin_src sh
+fc-cache -fv
+#+end_src
+
+** lua-language-server
+In Debian I have to compile the sources. TODO.
+
+** typescript-language-server
+To install:
+#+begin_src sh
+sudo npm i -g typescript-language-server
+#+end_src
+
+** Packer
+To install packer:
+#+begin_src sh
+git clone --depth 1 https://github.com/wbthomason/packer.nvim ~/.local/share/nvim/site/pack/packer/start/packer.nvim
+#+end_src
+
+* Install the dotfiles
+To install run:
+#+begin_src sh
+stow i3 i3status nvim alacritty fish bin emacs jfortivpn rxvt bat
+#+end_src
+
+* NixOS
+#+begin_src sh
+home-manager switch --flake ./nixos
+#+end_src
