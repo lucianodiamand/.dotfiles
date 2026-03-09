@@ -8,7 +8,7 @@ Download the fonts:
 wget -c https://github.com/ryanoasis/nerd-fonts/releases/download/v3.2.1/Hack.zip -P /tmp
 #+end_src
 
-Uncompress in directory: ./local/share/fonts
+Uncompress into directory: ~/.local/share/fonts
 
 Run:
 #+begin_src sh
@@ -30,13 +30,26 @@ To install packer:
 git clone --depth 1 https://github.com/wbthomason/packer.nvim ~/.local/share/nvim/site/pack/packer/start/packer.nvim
 #+end_src
 
+* Platforms
+** Debian
+Install common dependencies:
+#+begin_src sh
+sudo apt install stow git curl unzip fontconfig
+#+end_src
+
+Note: lua-language-server needs to be compiled from source on Debian (TODO).
+
+** NixOS
+Use the Home Manager flake in `nixos/`:
+#+begin_src sh
+home-manager switch --flake ./nixos
+#+end_src
+
+** FreeBSD
+Install dependencies with your package manager (pkg), then run stow as below.
+
 * Install the dotfiles
 To install run:
 #+begin_src sh
 stow i3 i3status nvim alacritty fish bin emacs jfortivpn rxvt bat
-#+end_src
-
-* NixOS
-#+begin_src sh
-home-manager switch --flake ./nixos
 #+end_src
