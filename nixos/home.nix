@@ -201,6 +201,9 @@ in {
   # i3status config
   home.file.".config/i3status/config".source = "${dotfiles}/i3status/.config/i3status/config";
 
+  # bat config
+  home.file.".config/bat/config".source = "${dotfiles}/bat/.config/bat/config";
+
   home.file.".Xresources.d" = {
     source = "${dotfiles}/rxvt/.Xresources.d";  # carpeta en tu repo
     recursive = true;   # gestiona todo el árbol
