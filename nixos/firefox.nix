@@ -6,6 +6,13 @@ in {
   programs.firefox = {
     enable = true;
 
+    policies = {
+      OverrideFirstRunPage = "";
+      OverridePostUpdatePage = "";
+      DisableFirefoxStudies = true;
+      DisableTelemetry = true;
+    };
+
     profiles.privacy = {
       isDefault = true;
       extensions.packages = with addons; [
