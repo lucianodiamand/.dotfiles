@@ -59,6 +59,7 @@ in {
         "browser.safebrowsing.phishing.enabled" = true;
         "dom.security.https_only_mode" = true;
         "dom.security.https_only_mode_ever_enabled" = true;
+        "browser.translations.enable" = false;
       };
     };
   };
