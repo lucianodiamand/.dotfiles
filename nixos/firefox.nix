@@ -14,7 +14,7 @@ in {
         clearurls
         localcdn
         cookie-autodelete
-        solarized-dark-theme
+        solarized_fox%
       ];
       settings = {
         "extensions.autoDisableScopes" = 0;
