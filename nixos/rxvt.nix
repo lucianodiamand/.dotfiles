@@ -24,8 +24,4 @@ in {
   # .Xresources para rvxt (urxvt)
   home.file.".Xresources".source = "${dotfiles}/rxvt/.Xresources.d/solarized-light";
 
-  home.file.".xinitrc".text = ''
-    xrdb -merge ~/.Xresources
-    exec i3
-  '';
 }

@@ -4,16 +4,13 @@ let
   dotfiles = ../.;
   pass-otp = pkgs.pass.withExtensions (e: [ e.pass-otp ]);
 in {
-  imports = [ ./w3m.nix ./bat.nix ./btop.nix ./zathura.nix ./emacs.nix ./nvim.nix ./ssh.nix ./mail.nix ./git.nix ./rxvt.nix ];
+  imports = [ ./w3m.nix ./bat.nix ./btop.nix ./zathura.nix ./emacs.nix ./nvim.nix ./ssh.nix ./mail.nix ./git.nix ./rxvt.nix ./i3.nix ];
   home.username = "user";
   home.homeDirectory = "/home/user";
   home.stateVersion = "25.05";
   home.enableNixpkgsReleaseCheck = false;
 
   home.packages = with pkgs; [
-    i3
-    i3status
-    xss-lock
     dmenu
     pkgs.nerd-fonts.hack
     (pkgs.writeShellScriptBin "vi" ''
@@ -184,12 +181,6 @@ in {
     VISUAL = "vi";
     INSTANT_CLIENT_PATH = "$HOME/.oracle/instantclient_23_8";
   };
-
-  # Incluye el archivo real de i3 desde tu estructura actual
-  home.file.".config/i3/config".source = "${dotfiles}/i3/.config/i3/config";
-
-  # i3status config
-  home.file.".config/i3status/config".source = "${dotfiles}/i3status/.config/i3status/config";
 
   # Configuración de GnuPG
   programs.gpg = {
