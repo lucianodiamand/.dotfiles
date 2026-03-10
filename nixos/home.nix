@@ -174,6 +174,9 @@ in {
 
     # forensics
     ghidra-bin
+
+    # multimedia
+    mpv
   ];
 
   fonts.fontconfig.enable = true;
