@@ -211,10 +211,6 @@ in {
   # btop config
   home.file.".config/btop/btop.conf".source = "${dotfiles}/btop/.config/btop/btop.conf";
  
-  # w3m
-  home.file.".w3m/config".source = "${dotfiles}/w3m/.w3m/config";
-  home.file.".w3m/keymap".source = "${dotfiles}/w3m/.w3m/keymap";
-
   # zathura
   home.file.".config/zathura/zathurarc".source = "${dotfiles}/zathura/.config/zathura/zathurarc";
 

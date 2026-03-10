@@ -1,7 +1,13 @@
 { pkgs, lib, ... }:
 
-{
+let
+  dotfiles = ../.;
+in {
   home.packages = [ pkgs.w3m ];
+
+  home.file.".w3m/config".source = "${dotfiles}/w3m/.w3m/config";
+  home.file.".w3m/keymap".source = "${dotfiles}/w3m/.w3m/keymap";
+
 
   programs.zsh.initContent = lib.mkAfter ''
     # URL-encode simple (suficiente para texto normal)
