@@ -2,9 +2,8 @@
 
 let
   dotfiles = ../.;
-  pass-otp = pkgs.pass.withExtensions (e: [ e.pass-otp ]);
 in {
-  imports = [ ./w3m.nix ./bat.nix ./btop.nix ./zathura.nix ./emacs.nix ./nvim.nix ./ssh.nix ./mail.nix ./git.nix ./rxvt.nix ./i3.nix ];
+  imports = [ ./w3m.nix ./bat.nix ./btop.nix ./zathura.nix ./emacs.nix ./nvim.nix ./ssh.nix ./mail.nix ./git.nix ./rxvt.nix ./i3.nix ./pass.nix ];
   home.username = "user";
   home.homeDirectory = "/home/user";
   home.stateVersion = "25.05";
@@ -29,7 +28,6 @@ in {
     home-manager
     networkmanagerapplet
     gnupg
-    pass-otp
     #pinentry-tty
     pinentry-gtk2
     nodejs_22
