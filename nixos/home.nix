@@ -8,7 +8,6 @@ in {
   home.homeDirectory = "/home/user";
   home.stateVersion = "25.05";
   home.enableNixpkgsReleaseCheck = false;
-  home-manager.backupFileExtension = "backup";
 
   home.packages = with pkgs; [
     dmenu
