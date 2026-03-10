@@ -107,6 +107,7 @@ in {
     openfortivpn
 
     w3m
+    buku
 
     guile
 
