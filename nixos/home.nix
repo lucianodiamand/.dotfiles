@@ -181,6 +181,11 @@ in {
   programs.direnv.enable = true;
   programs.direnv.nix-direnv.enable = true;
 
+  programs.zoxide = {
+    enable = true;
+    enableZshIntegration = true;
+  };
+
   programs.zsh = {
     enable = true;
     autocd = false;
