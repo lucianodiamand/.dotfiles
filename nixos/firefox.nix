@@ -15,6 +15,10 @@ in {
         localcdn
         cookie-autodelete
       ];
+      settings = {
+        "extensions.autoDisableScopes" = 0;
+        "extensions.enabledScopes" = 15;
+      };
     };
   };
 }
