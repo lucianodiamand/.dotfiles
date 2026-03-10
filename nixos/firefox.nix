@@ -60,6 +60,9 @@ in {
         "dom.security.https_only_mode" = true;
         "dom.security.https_only_mode_ever_enabled" = true;
         "browser.translations.enable" = false;
+        "dom.webnotifications.enabled" = false;
+        "dom.push.enabled" = false;
+        "permissions.default.desktop-notification" = 2;
       };
     };
   };
