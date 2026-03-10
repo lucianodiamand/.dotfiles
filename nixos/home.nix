@@ -3,7 +3,7 @@
 let
   dotfiles = ../.;
 in {
-  imports = [ ./w3m.nix ./bat.nix ./btop.nix ./zathura.nix ./emacs.nix ./nvim.nix ./ssh.nix ./mail.nix ./git.nix ./rxvt.nix ./i3.nix ./pass.nix ];
+  imports = [ ./w3m.nix ./bat.nix ./btop.nix ./zathura.nix ./emacs.nix ./nvim.nix ./ssh.nix ./mail.nix ./git.nix ./rxvt.nix ./i3.nix ./pass.nix ./gpg.nix ];
   home.username = "user";
   home.homeDirectory = "/home/user";
   home.stateVersion = "25.05";
@@ -180,21 +180,6 @@ in {
     INSTANT_CLIENT_PATH = "$HOME/.oracle/instantclient_23_8";
   };
 
-  # Configuración de GnuPG
-  programs.gpg = {
-    enable = true;
-  };
-
-  # Configuración del agente de GnuPG
-  services.gpg-agent = {
-    enable = true;
-    pinentry.package = pkgs.pinentry.gtk2;
-    #pinentryFlavor = "tty";  # "gtk2", "qt", "curses", etc.
-    #defaultCacheTtl = 1800;
-    #maxCacheTtl = 7200;
-    enableSshSupport = true;
-  };
- 
   programs.direnv.enable = true;
   programs.direnv.nix-direnv.enable = true;
 
