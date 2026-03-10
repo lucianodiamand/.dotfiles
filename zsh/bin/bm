@@ -7,7 +7,22 @@ strip_ansi() {
   sed -E 's/\x1B\[[0-9;]*[[:alpha:]]//g'
 }
 
-build_list() {
+copy_to_clipboard() {
+  local text="$1"
+
+  if command -v wl-copy >/dev/null 2>&1; then
+    printf '%s' "$text" | wl-copy
+  elif command -v xclip >/dev/null 2>&1; then
+    printf '%s' "$text" | xclip -selection clipboard
+  elif command -v xsel >/dev/null 2>&1; then
+    printf '%s' "$text" | xsel --clipboard --input
+  else
+    printf 'No encontré wl-copy, xclip ni xsel\n' >&2
+    return 1
+  fi
+}
+
+build_raw_list() {
   buku -p |
     strip_ansi |
     awk '
@@ -56,8 +71,8 @@ build_list() {
     '
 }
 
-choice="$(
-  build_list |
+build_display_list() {
+  build_raw_list |
     awk -F '\t' '
       function trunc(s, n) {
         return (length(s) > n ? substr(s, 1, n - 1) "…" : s)
@@ -68,23 +83,72 @@ choice="$(
         display = sprintf("%-42s | %-24s | %s", title, tags, $3)
         printf "%s\t%s\t%s\t%s\t%s\t%s\n", display, $1, $2, $3, $4, $5
       }
-    ' |
-    fzf \
-      --delimiter=$'\t' \
-      --with-nth=1 \
-      --preview '
-        printf "Título: %s\n\n" {3}
-        printf "URL: %s\n\n" {4}
-        printf "Descripción: %s\n\n" {5}
-        printf "Tags: %s\n" {6}
-      ' \
-      --preview-window=down:10:wrap \
-      --height=80% \
-      --layout=reverse \
-      --prompt="Bookmarks> "
-)"
+    '
+}
 
-[ -n "${choice:-}" ] || exit 0
+delete_bookmark() {
+  local id="$1"
+  buku -d "$id" >/dev/null
+}
 
-url="$(printf '%s\n' "$choice" | awk -F '\t' '{print $4}')"
-exec "$BROWSER_TEXT" "$url"
+open_url() {
+  local url="$1"
+  exec "$BROWSER_TEXT" "$url"
+}
+
+usage() {
+  cat <<'EOF'
+Uso:
+  bm                 # abre selector interactivo
+  bm --list          # imprime lista para fzf
+  bm --delete ID     # borra bookmark por ID
+  bm --copy URL      # copia URL al portapapeles
+  bm --open URL      # abre URL con w3m
+EOF
+}
+
+case "${1:-}" in
+  --list)
+    build_display_list
+    exit 0
+    ;;
+  --delete)
+    [ $# -eq 2 ] || { usage >&2; exit 1; }
+    delete_bookmark "$2"
+    exit 0
+    ;;
+  --copy)
+    [ $# -eq 2 ] || { usage >&2; exit 1; }
+    copy_to_clipboard "$2"
+    exit 0
+    ;;
+  --open)
+    [ $# -eq 2 ] || { usage >&2; exit 1; }
+    open_url "$2"
+    ;;
+  --help|-h)
+    usage
+    exit 0
+    ;;
+esac
+
+SELF="$(readlink -f "$0" 2>/dev/null || printf '%s' "$0")"
+
+"$SELF" --list |
+  fzf \
+    --delimiter=$'\t' \
+    --with-nth=1 \
+    --height=80% \
+    --layout=reverse \
+    --prompt="Bookmarks> " \
+    --preview '
+      printf "Título: %s\n\n" {3}
+      printf "URL: %s\n\n" {4}
+      printf "Descripción: %s\n\n" {5}
+      printf "Tags: %s\n" {6}
+    ' \
+    --preview-window=down:10:wrap \
+    --header $'Enter: abrir  |  Ctrl-D: borrar  |  Ctrl-Y: copiar URL' \
+    --bind "enter:become($SELF --open {4})" \
+    --bind "ctrl-d:execute-silent($SELF --delete {2})+reload($SELF --list)" \
+    --bind "ctrl-y:execute-silent($SELF --copy {4})"
