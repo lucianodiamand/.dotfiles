@@ -25,6 +25,7 @@ in {
       settings = {
         "extensions.autoDisableScopes" = 0;
         "extensions.enabledScopes" = 15;
+        "extensions.openTabOnInstall" = false;
         "browser.contentblocking.category" = "strict";
         "network.cookie.cookieBehavior" = 1;
         "privacy.donottrackheader.enabled" = true;
