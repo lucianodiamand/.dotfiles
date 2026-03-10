@@ -4,7 +4,7 @@ let
   dotfiles = ../.;
   pass-otp = pkgs.pass.withExtensions (e: [ e.pass-otp ]);
 in {
-  imports = [ ./w3m.nix ./bat.nix ./btop.nix ./zathura.nix ./emacs.nix ./nvim.nix ./ssh.nix ./mail.nix ./git.nix ];
+  imports = [ ./w3m.nix ./bat.nix ./btop.nix ./zathura.nix ./emacs.nix ./nvim.nix ./ssh.nix ./mail.nix ./git.nix ./rxvt.nix ];
   home.username = "user";
   home.homeDirectory = "/home/user";
   home.stateVersion = "25.05";
@@ -14,11 +14,6 @@ in {
     i3
     i3status
     xss-lock
-    (rxvt-unicode.override {
-      configure = { availablePlugins, ... }: {
-        plugins = with availablePlugins; [ perls font-size ];
-      };
-     })
     dmenu
     pkgs.nerd-fonts.hack
     (pkgs.writeShellScriptBin "vi" ''
@@ -196,24 +191,6 @@ in {
   # i3status config
   home.file.".config/i3status/config".source = "${dotfiles}/i3status/.config/i3status/config";
 
-  home.file.".Xresources.d" = {
-    source = "${dotfiles}/rxvt/.Xresources.d";  # carpeta en tu repo
-    recursive = true;   # gestiona todo el árbol
-    force = true;       # reemplaza si ya existe
-  };
-
-  home.file.".Xresources.base".source = "${dotfiles}/rxvt/.Xresources.base";
-  home.file.".Xresources.solarized-dark".source = "${dotfiles}/rxvt/.Xresources.solarized-dark";
-  home.file.".Xresources.solarized-light".source = "${dotfiles}/rxvt/.Xresources.solarized-light";
-
-  # .Xresources para rvxt (urxvt)
-  home.file.".Xresources".source = "${dotfiles}/rxvt/.Xresources.d/solarized-light";
-
-  home.file.".xinitrc".text = ''
-    xrdb -merge ~/.Xresources
-    exec i3
-  '';
- 
   # Configuración de GnuPG
   programs.gpg = {
     enable = true;
