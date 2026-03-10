@@ -19,7 +19,7 @@
       system = "x86_64-linux";
       pkgs = import nixpkgs {
         inherit system;
-        overlays = [ nur.overlay ];
+        overlays = [ nur.overlays.default ];
       };
     in {
       homeConfigurations.user = home-manager.lib.homeManagerConfiguration {
