@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/usr/bin/env zsh
 
 CURL_FILE="${CURL_FILE:-curl.http}"
 RAW_MODE=false
@@ -11,6 +11,20 @@ fi
 
 print_error() {
   echo -e "\033[1;31m❌ $1\033[0m"
+}
+
+csv_export_line() {
+  local header="$1"
+  local line="$2"
+  local -a keys values
+
+  IFS=',' read -rA keys <<< "$header"
+  IFS=',' read -rA values <<< "$line"
+
+  local i
+  for i in {1..$#keys}; do
+    export "${keys[i]}=${values[i]}"
+  done
 }
 
 get_block() {
@@ -95,8 +109,7 @@ ep_section() {
       exit 1
     fi
 
-    IFS=',' read -r $(echo "$header" | tr ',' ' ') <<< "$first_row"
-    export $(echo "$header" | tr ',' ' ')
+    csv_export_line "$header" "$first_row"
   elif [[ -n "$csv_file" ]]; then
     print_error "No se encontro el archivo CSV '$csv_file'"
     exit 1
@@ -291,7 +304,6 @@ if [[ "$1" == "--pick" ]]; then
   fi
 
   header=$(head -n1 "$csv_file")
-  fields=$(echo "$header" | tr ',' ' ')
   selected=$(tail -n +2 "$csv_file" | fzf --prompt="Seleccioná un registro: ")
 
   if [[ -z "$selected" ]]; then
@@ -299,8 +311,7 @@ if [[ "$1" == "--pick" ]]; then
     exit 1
   fi
 
-  IFS=',' read -r $fields <<< "$selected"
-  export $fields
+  csv_export_line "$header" "$selected"
   ep_section "$section"
   exit $?
 fi
@@ -563,4 +574,3 @@ fi
 
 # Ejecutar directamente
 ep_section "$1"
-
