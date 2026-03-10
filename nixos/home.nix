@@ -4,7 +4,7 @@ let
   dotfiles = ../.;
   pass-otp = pkgs.pass.withExtensions (e: [ e.pass-otp ]);
 in {
-  imports = [ ./w3m.nix ];
+  imports = [ ./w3m.nix ./bat.nix ./btop.nix ./zathura.nix ];
   home.username = "user";
   home.homeDirectory = "/home/user";
   home.stateVersion = "25.05";
@@ -63,7 +63,6 @@ in {
     #treesit-grammars.with-all-grammars
 
     # command line tools
-    bat
     tig
     zoxide
     tldr
@@ -77,7 +76,6 @@ in {
     udisks2
     smartmontools
     usbutils
-    btop
     git-filter-repo
 
     # editors
@@ -126,7 +124,6 @@ in {
 
     dosfstools
 
-    zathura
     testdisk
 
     # presentation generation
@@ -204,15 +201,6 @@ in {
 
   # i3status config
   home.file.".config/i3status/config".source = "${dotfiles}/i3status/.config/i3status/config";
-
-  # bat config
-  home.file.".config/bat/config".source = "${dotfiles}/bat/.config/bat/config";
-
-  # btop config
-  home.file.".config/btop/btop.conf".source = "${dotfiles}/btop/.config/btop/btop.conf";
- 
-  # zathura
-  home.file.".config/zathura/zathurarc".source = "${dotfiles}/zathura/.config/zathura/zathurarc";
 
   home.file.".Xresources.d" = {
     source = "${dotfiles}/rxvt/.Xresources.d";  # carpeta en tu repo
