@@ -33,11 +33,16 @@ in {
 
     # ? algo  -> búsqueda web
     web_w3m() {
+      if [[ $# -eq 0 ]]; then
+        w3m "https://duckduckgo.com/html/"
+        return 0
+      fi
+
       local q
-      q="$(urlencode "$*")"
+      q="$(urlencode "$@")"
       w3m "https://duckduckgo.com/html/?q=$q"
     }
 
-    alias '?'='web_w3m'
+    alias '?'='noglob web_w3m'
   '';
 }
