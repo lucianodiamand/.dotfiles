@@ -1,0 +1,22 @@
+# Colors
+color 1
+basic_color 7
+anchor_color 6
+image_color 2
+form_color 3
+visited_anchor_color 5
+mark_color 1
+
+# Links
+display_link_number 1
+
+# Scroll
+scroll_step 1
+
+# History
+use-history 1
+history 1000
+save_hist 1
+
+# Options
+display_borders 1
