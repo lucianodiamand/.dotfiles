@@ -8,7 +8,7 @@ in {
 
     profiles.privacy = {
       isDefault = true;
-      extensions = with addons; [
+      extensions.packages = with addons; [
         ublock-origin
         privacy-badger
         clearurls
