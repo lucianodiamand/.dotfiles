@@ -215,6 +215,9 @@ in {
   home.file.".w3m/config".source = "${dotfiles}/w3m/.w3m/config";
   home.file.".w3m/keymap".source = "${dotfiles}/w3m/.w3m/keymap";
 
+  # zathura
+  home.file.".config/zathura/zathurarc".source = "${dotfiles}/zathura/.config/zathura/zathurarc";
+
   home.file.".Xresources.d" = {
     source = "${dotfiles}/rxvt/.Xresources.d";  # carpeta en tu repo
     recursive = true;   # gestiona todo el árbol
