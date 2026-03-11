@@ -29,6 +29,7 @@ in {
         "browser.startup.page" = 1;
         "browser.startup.homepage" = "about:home";
         "browser.startup.firstrunSkipsHomepage" = false;
+        "browser.toolbars.bookmarks.visibility" = "never";
         "browser.contentblocking.category" = "strict";
         "network.cookie.cookieBehavior" = 1;
         "privacy.donottrackheader.enabled" = true;
