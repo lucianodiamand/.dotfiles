@@ -4,6 +4,8 @@ private
 private-dev
 private-tmp
 
+whitelist /home/user/.nix-profile
+
 caps.drop all
 seccomp
 nonewprivs
