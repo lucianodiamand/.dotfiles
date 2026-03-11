@@ -6,6 +6,13 @@ in {
   programs.firefox = {
     enable = true;
 
+    policies = {
+      OverrideFirstRunPage = "";
+      OverridePostUpdatePage = "";
+      DisableFirefoxStudies = true;
+      DisableTelemetry = true;
+    };
+
     profiles.privacy = {
       isDefault = true;
       extensions.packages = with addons; [
@@ -18,6 +25,10 @@ in {
       settings = {
         "extensions.autoDisableScopes" = 0;
         "extensions.enabledScopes" = 15;
+        "extensions.openTabOnInstall" = false;
+        "browser.startup.page" = 1;
+        "browser.startup.homepage" = "about:home";
+        "browser.startup.firstrunSkipsHomepage" = false;
         "browser.contentblocking.category" = "strict";
         "network.cookie.cookieBehavior" = 1;
         "privacy.donottrackheader.enabled" = true;
