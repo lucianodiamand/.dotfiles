@@ -2,6 +2,7 @@
 set -euo pipefail
 
 BROWSER_TEXT="${BROWSER_TEXT:-w3m}"
+BROWSER_GUI="${BROWSER_GUI:-firefox}"
 
 strip_ansi() {
   sed -E 's/\x1B\[[0-9;]*[[:alpha:]]//g'
@@ -91,19 +92,29 @@ delete_bookmark() {
   buku -d "$id" >/dev/null
 }
 
-open_url() {
+open_url_text() {
   local url="$1"
   exec "$BROWSER_TEXT" "$url"
+}
+
+open_url_gui() {
+  local url="$1"
+  exec "$BROWSER_GUI" "$url"
 }
 
 usage() {
   cat <<'EOF'
 Uso:
-  bm                 # abre selector interactivo
-  bm --list          # imprime lista para fzf
-  bm --delete ID     # borra bookmark por ID
-  bm --copy URL      # copia URL al portapapeles
-  bm --open URL      # abre URL con w3m
+  bm                   # abre selector interactivo
+  bm --list            # imprime lista para fzf
+  bm --delete ID       # borra bookmark por ID
+  bm --copy URL        # copia URL al portapapeles
+  bm --open-text URL   # abre URL con navegador texto
+  bm --open-gui URL    # abre URL con navegador gráfico
+
+Variables de entorno:
+  BROWSER_TEXT=w3m
+  BROWSER_GUI=firefox
 EOF
 }
 
@@ -122,9 +133,13 @@ case "${1:-}" in
     copy_to_clipboard "$2"
     exit 0
     ;;
-  --open)
+  --open-text)
     [ $# -eq 2 ] || { usage >&2; exit 1; }
-    open_url "$2"
+    open_url_text "$2"
+    ;;
+  --open-gui)
+    [ $# -eq 2 ] || { usage >&2; exit 1; }
+    open_url_gui "$2"
     ;;
   --help|-h)
     usage
@@ -148,7 +163,8 @@ SELF="$(readlink -f "$0" 2>/dev/null || printf '%s' "$0")"
       printf "Tags: %s\n" {6}
     ' \
     --preview-window=down:10:wrap \
-    --header $'Enter: abrir  |  Ctrl-D: borrar  |  Ctrl-Y: copiar URL' \
-    --bind "enter:become($SELF --open {4})" \
+    --header $'Enter: Firefox  |  Ctrl-W: w3m  |  Ctrl-D: borrar  |  Ctrl-Y: copiar URL' \
+    --bind "enter:become($SELF --open-gui {4})" \
+    --bind "ctrl-w:become($SELF --open-text {4})" \
     --bind "ctrl-d:execute-silent($SELF --delete {2})+reload($SELF --list)" \
     --bind "ctrl-y:execute-silent($SELF --copy {4})"
