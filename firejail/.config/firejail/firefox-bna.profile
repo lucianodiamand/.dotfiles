@@ -1,10 +1,10 @@
 #include /etc/firejail/firefox.profile
 
-private
+private-home .mozilla,.cache,.config
 private-dev
 private-tmp
 
-whitelist /home/user/.nix-profile
+private-bin firefox
 
 caps.drop all
 seccomp
