@@ -1,0 +1,4 @@
+whitelist dns
+whitelist bna.com.ar
+whitelist www.bna.com.ar
+blacklist all
