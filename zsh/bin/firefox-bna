@@ -1,2 +1,2 @@
 #!/usr/bin/env zsh
-firejail --profile=~/.config/firejail/firefox-bna.profile firefox "$@"
+firejail --profile=~/.config/firejail/firefox-bna.profile /home/user/.nix-profile/bin/firefox "$@"
