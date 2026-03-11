@@ -1,4 +1,22 @@
-whitelist dns
-whitelist bna.com.ar
-whitelist www.bna.com.ar
-blacklist all
+*filter
+:INPUT DROP [0:0]
+:FORWARD DROP [0:0]
+:OUTPUT DROP [0:0]
+
+-A INPUT -i lo -j ACCEPT
+-A OUTPUT -o lo -j ACCEPT
+
+-A INPUT -m state --state RELATED,ESTABLISHED -j ACCEPT
+-A OUTPUT -m state --state RELATED,ESTABLISHED -j ACCEPT
+
+# DNS via systemd-resolved
+-A OUTPUT -p udp -d 127.0.0.53 --dport 53 -j ACCEPT
+-A OUTPUT -p tcp -d 127.0.0.53 --dport 53 -j ACCEPT
+
+# Allow only BNA IPs (HTTP/HTTPS)
+-A OUTPUT -p tcp -d 190.12.105.169/32 --dport 80 -j ACCEPT
+-A OUTPUT -p tcp -d 190.12.105.169/32 --dport 443 -j ACCEPT
+-A OUTPUT -p tcp -d 190.136.24.40/32 --dport 80 -j ACCEPT
+-A OUTPUT -p tcp -d 190.136.24.40/32 --dport 443 -j ACCEPT
+
+COMMIT
