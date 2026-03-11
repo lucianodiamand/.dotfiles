@@ -3,7 +3,7 @@
 let
   dotfiles = ../.;
 in {
-  imports = [ ./w3m.nix ./bat.nix ./btop.nix ./zathura.nix ./emacs.nix ./nvim.nix ./ssh.nix ./mail.nix ./git.nix ./rxvt.nix ./i3.nix ./pass.nix ./gpg.nix ./gpt-term.nix ./firefox.nix ];
+  imports = [ ./w3m.nix ./bat.nix ./btop.nix ./zathura.nix ./emacs.nix ./nvim.nix ./ssh.nix ./mail.nix ./git.nix ./rxvt.nix ./i3.nix ./pass.nix ./gpg.nix ./gpt-term.nix ./firefox.nix ./firejail.nix ];
   home.username = "user";
   home.homeDirectory = "/home/user";
   home.stateVersion = "25.05";
