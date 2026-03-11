@@ -4,8 +4,6 @@ private-home .mozilla,.cache,.config
 private-dev
 private-tmp
 
-private-bin firefox
-
 caps.drop all
 seccomp
 nonewprivs
