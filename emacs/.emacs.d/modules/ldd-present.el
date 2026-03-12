@@ -1,9 +1,20 @@
 ;; -*- lexical-binding: t; -*-
 
+(defun ldd/org-present--center-title ()
+  (let ((title (or (org-get-heading t t t t) "")))
+    (if (string= title "")
+        " "
+      (concat
+       (propertize " " 'display
+                   `(space :align-to (- center ,(/ (string-width title) 2))))
+       title))))
+
 (defun ldd/org-present-prepare-slide ()
   (org-overview)
   (org-show-entry)
-  (org-show-children))
+  (org-show-children)
+  (when (bound-and-true-p org-present-mode)
+    (setq header-line-format (ldd/org-present--center-title))))
 
 (defvar-local ldd/org-present--line-numbers nil)
 (defvar-local ldd/org-present--mode-line-format nil)
@@ -37,7 +48,7 @@
   (setq-local ldd/org-present--mode-line-format mode-line-format)
   (setq mode-line-format nil)
   (setq-local ldd/org-present--header-line-format header-line-format)
-  (setq header-line-format " ")
+  (setq header-line-format (ldd/org-present--center-title))
   (setq-local ldd/org-present--hide-emphasis org-hide-emphasis-markers)
   (setq-local org-hide-emphasis-markers t)
   (setq-local ldd/org-present--org-pretty-entities org-pretty-entities)
@@ -116,8 +127,21 @@
   :hook ((org-present-mode . ldd/org-present-hook)
          (org-present-mode-quit . ldd/org-present-quit-hook))
   :bind (:map org-present-mode-keymap
+              ("C-j" . ldd/org-present-next)
+              ("C-k" . ldd/org-present-prev)
               ("C-c C-j" . ldd/org-present-next)
               ("C-c C-k" . ldd/org-present-prev)))
+
+(with-eval-after-load 'org-present
+  (define-key org-present-mode-map (kbd "C-j") #'ldd/org-present-next)
+  (define-key org-present-mode-map (kbd "C-k") #'ldd/org-present-prev)
+  (with-eval-after-load 'evil
+    (evil-define-key* 'normal org-present-mode-map
+      (kbd "C-j") #'ldd/org-present-next
+      (kbd "C-k") #'ldd/org-present-prev)
+    (evil-define-key* 'motion org-present-mode-map
+      (kbd "C-j") #'ldd/org-present-next
+      (kbd "C-k") #'ldd/org-present-prev))))
 
 (with-eval-after-load 'org
   (define-key org-mode-map (kbd "C-c P") #'org-present)
