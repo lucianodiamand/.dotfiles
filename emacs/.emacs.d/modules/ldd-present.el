@@ -36,18 +36,32 @@
   (when (fboundp 'ldd/start-panel)
     (ldd/start-panel)))
 
+<<<<<<< Updated upstream
 (defun ldd/org-present-prev ()
   (interactive)
   (org-present-prev)
   (ldd/org-present-prepare-slide))
 
 (defun ldd/org-present-next ()
+=======
+(defun ldd/org-present-next ()
+  "Avanza al siguiente slide."
+>>>>>>> Stashed changes
   (interactive)
   (org-present-next)
   (ldd/org-present-prepare-slide)
   (when (fboundp 'live-crafter-add-timestamp)
     (live-crafter-add-timestamp (substring-no-properties (org-get-heading t t t t)))))
 
+<<<<<<< Updated upstream
+=======
+(defun ldd/org-present-prev ()
+  "Vuelve al slide anterior."
+  (interactive)
+  (org-present-prev)
+  (ldd/org-present-prepare-slide))
+
+>>>>>>> Stashed changes
 (use-package org-present
   :commands org-present
   :hook ((org-present-mode . ldd/org-present-hook)
