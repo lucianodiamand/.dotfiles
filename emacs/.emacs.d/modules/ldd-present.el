@@ -16,6 +16,8 @@
   (when (bound-and-true-p org-present-mode)
     (setq header-line-format (ldd/org-present--center-title))))
 
+(defvar org-present-mode-map nil)
+
 (defvar-local ldd/org-present--line-numbers nil)
 (defvar-local ldd/org-present--mode-line-format nil)
 (defvar-local ldd/org-present--header-line-format nil)
@@ -70,11 +72,13 @@
     (setq-local ldd/org-present--visual-fill-column-center-text
                 (when (boundp 'visual-fill-column-center-text)
                   visual-fill-column-center-text))
-    (visual-fill-column-mode 1)
     (when (boundp 'visual-fill-column-width)
       (setq-local visual-fill-column-width 110))
     (when (boundp 'visual-fill-column-center-text)
-      (setq-local visual-fill-column-center-text t)))
+      (setq-local visual-fill-column-center-text t))
+    (visual-fill-column-mode 1)
+    (when (fboundp 'visual-fill-column-adjust)
+      (visual-fill-column-adjust)))
   (when (fboundp 'org-appear-mode)
     (setq-local ldd/org-present--org-appear-mode (bound-and-true-p org-appear-mode))
     (org-appear-mode -1))
@@ -133,15 +137,16 @@
               ("C-c C-k" . ldd/org-present-prev)))
 
 (with-eval-after-load 'org-present
-  (define-key org-present-mode-map (kbd "C-j") #'ldd/org-present-next)
-  (define-key org-present-mode-map (kbd "C-k") #'ldd/org-present-prev)
-  (with-eval-after-load 'evil
-    (evil-define-key* 'normal org-present-mode-map
-      (kbd "C-j") #'ldd/org-present-next
-      (kbd "C-k") #'ldd/org-present-prev)
-    (evil-define-key* 'motion org-present-mode-map
-      (kbd "C-j") #'ldd/org-present-next
-      (kbd "C-k") #'ldd/org-present-prev))))
+  (when (keymapp org-present-mode-map)
+    (define-key org-present-mode-map (kbd "C-j") #'ldd/org-present-next)
+    (define-key org-present-mode-map (kbd "C-k") #'ldd/org-present-prev)
+    (with-eval-after-load 'evil
+      (evil-define-key* 'normal org-present-mode-map
+        (kbd "C-j") #'ldd/org-present-next
+        (kbd "C-k") #'ldd/org-present-prev)
+      (evil-define-key* 'motion org-present-mode-map
+        (kbd "C-j") #'ldd/org-present-next
+        (kbd "C-k") #'ldd/org-present-prev)))))
 
 (with-eval-after-load 'org
   (define-key org-mode-map (kbd "C-c P") #'org-present)
