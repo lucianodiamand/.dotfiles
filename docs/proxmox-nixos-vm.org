@@ -1,0 +1,31 @@
+#+title: Install Nixos in proxmox VM
+#+author: Luciano Daniel Diamand
+
+* Install
+
+Execute the following script in proxmox
+#+begin_src bash
+./create-vm-nixos.sh
+#+end_src
+
+Get ip address of nixos host
+#+begin_src bash
+ip add
+#+end_src
+
+Change root password
+#+begin_src bash
+sudo passwd root
+#+end_src
+
+Access from another machine
+#+begin_src bash
+ssh root@10.10.10.90
+#+end_src
+
+Execute the following script
+#+begin_src bash
+chmod a+x install-nixos-vm.sh
+./install-nixos-vm.sh
+#+end_src
+
