@@ -1,0 +1,6 @@
+
+gpg --keyserver hkps://keys.openpgp.org --recv-keys A28BF40C3E551372662D14F741AAE7DCCA3D8351
+
+gpg --verify ~/Downloads/guix-system-install-1.5.0.x86_64-linux.iso.sig ~/Downloads/guix-system-install-1.5.0.x86_64-linux.iso
+
+gpg --edit-key A28BF40C3E551372662D14F741AAE7DCCA3D8351
