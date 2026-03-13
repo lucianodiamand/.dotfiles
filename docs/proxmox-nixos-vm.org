@@ -29,3 +29,14 @@ chmod a+x install-nixos-vm.sh
 ./install-nixos-vm.sh
 #+end_src
 
+Throws Warning!:
+#+begin_src bash
+Mount point '/boot' which backs the random seed file is world accessible, which is a security hole!
+Random seed file '/boot/loader/.#bootctlrandom-seedb5032b8add530d14' is world accessible, which is a security hole!
+#+end_src
+
+#+begin_src bash
+Usuario root con password temporal: nixos
+#+end_src
+
+Remove Boot Order to not boot from ISO

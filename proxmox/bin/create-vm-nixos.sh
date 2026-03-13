@@ -35,7 +35,6 @@ qm create "${VMID}" \
   --machine q35 \
   --bios ovmf \
   --agent 1 \
-  --serial0 socket \
   --vga std \
   --net0 virtio,bridge="${BRIDGE}" \
   --scsihw virtio-scsi-pci
