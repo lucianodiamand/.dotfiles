@@ -50,6 +50,7 @@
 (require 'ldd-keys-evil)
 
 (require 'ldd-core)
+(require 'ldd-org)
 (require 'ldd-org-roam)
 (require 'ldd-pdf-tools)
 (require 'ldd-vertico)

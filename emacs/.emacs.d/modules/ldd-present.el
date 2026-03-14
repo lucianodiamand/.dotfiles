@@ -146,7 +146,7 @@
         (kbd "C-k") #'ldd/org-present-prev)
       (evil-define-key* 'motion org-present-mode-map
         (kbd "C-j") #'ldd/org-present-next
-        (kbd "C-k") #'ldd/org-present-prev)))))
+        (kbd "C-k") #'ldd/org-present-prev))))
 
 (with-eval-after-load 'org
   (define-key org-mode-map (kbd "C-c P") #'org-present)
