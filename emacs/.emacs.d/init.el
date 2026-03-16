@@ -56,6 +56,7 @@
 (require 'ldd-vertico)
 
 (require 'ldd-android)
+(require 'ldd-c)
 (require 'ldd-typescript)
 (require 'ldd-scheme)
 ;;(require 'ldd-lua)
