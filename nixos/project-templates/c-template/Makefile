@@ -23,7 +23,7 @@ EXEC_NAME	= hello_command
 INSTALL		= install
 INSTALL_DIR	= ${PROJECT_ROOT}/rootfs/bin
 
-CFILES		= hello.c
+CFILES		= main.c
 HFILES		=
 
 OBJS		= $(CFILES:%.c=%.o)
@@ -34,11 +34,10 @@ all: hello
 	$(CC) $(CFLAGS) $(HEADER_OPS) -c $<
 
 hello: $(OBJS) $(HFILES)
-	$(CC) -o $(EXEC_NAME) $ˆ $(LDFLAGS)
+	$(CC) -o $(EXEC_NAME) $^ $(LDFLAGS)
 
 install: hello
-	test -d $(INSTALL_DIR) || $(INSTALL) -d -m 755 $
-(INSTALL_DIR)
+	test -d $(INSTALL_DIR) || $(INSTALL) -d -m 755 $(INSTALL_DIR)
 	$(INSTALL) -m 755 $(EXEC_NAME) $(INSTALL_DIR)
 
 clean:
