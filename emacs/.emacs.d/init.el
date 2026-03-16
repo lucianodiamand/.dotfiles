@@ -42,7 +42,7 @@
 ;; Reset del zoom
 (defun my/text-scale-reset () (interactive) (text-scale-set 0))
 (global-set-key (kbd "C-0") #'my/text-scale-reset)
-(setq text-scale-mode-step 1.0)
+(setq text-scale-mode-step 1.1)
 
 ;; Load pertinent modules
 (require 'ldd-straight)
