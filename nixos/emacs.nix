@@ -21,6 +21,7 @@ in {
   home.file.".emacs.d/modules/ldd-pdf-tools.el".source = "${dotfiles}/emacs/.emacs.d/modules/ldd-pdf-tools.el";
   home.file.".emacs.d/modules/ldd-vertico.el".source = "${dotfiles}/emacs/.emacs.d/modules/ldd-vertico.el";
   home.file.".emacs.d/modules/ldd-android.el".source = "${dotfiles}/emacs/.emacs.d/modules/ldd-android.el";
+  home.file.".emacs.d/modules/ldd-c.el".source = "${dotfiles}/emacs/.emacs.d/modules/ldd-c.el";
   home.file.".emacs.d/modules/ldd-scheme.el".source = "${dotfiles}/emacs/.emacs.d/modules/ldd-scheme.el";
   #home.file.".emacs.d/modules/ldd-lua.el".source = "${dotfiles}/emacs/.emacs.d/modules/ldd-lua.el";
   home.file.".emacs.d/modules/ldd-angular.el".source = "${dotfiles}/emacs/.emacs.d/modules/ldd-angular.el";
