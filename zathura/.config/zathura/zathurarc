@@ -21,3 +21,6 @@ set completion-highlight-fg "#fdf6e3"
 set recolor true
 set recolor-darkcolor "#839496"
 set recolor-lightcolor "#002b36"
+
+map <C-Up> zoom in
+map <C-Down> zoom out
