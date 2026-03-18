@@ -7,7 +7,7 @@ set -euo pipefail
 # Ejemplo:
 #   ./create-ubuntu-php56-vm.sh 160 ubuntu-legacy-php56 4096 2 32
 
-VMID="${1:-160}"
+VMID="${1:-180}"
 NAME="${2:-ubuntu-legacy-php56}"
 RAM="${3:-4096}"
 CORES="${4:-2}"
@@ -48,6 +48,12 @@ USERDATA_FILE="${SNIPPET_DIR}/user-data-${VMID}.yaml"
 
 cat > "${USERDATA_FILE}" <<EOF
 #cloud-config
+ssh_pwauth: true
+chpasswd:
+  list: |
+    ubuntu:ubuntu123
+  expire: false
+
 package_update: false
 package_upgrade: false
 
@@ -56,10 +62,10 @@ write_files:
     permissions: '0755'
     content: |
       #!/usr/bin/env bash
-      set -euo pipefail
+      set -euxo pipefail
       export DEBIAN_FRONTEND=noninteractive
 
-      echo "[1/8] Reconfigurando APT para old-releases..."
+      echo "[1/9] Configurando repositorios old-releases..."
       cat > /etc/apt/sources.list <<'APT'
       deb http://old-releases.ubuntu.com/ubuntu/ xenial main restricted universe multiverse
       deb http://old-releases.ubuntu.com/ubuntu/ xenial-updates main restricted universe multiverse
@@ -68,11 +74,11 @@ write_files:
 
       apt-get update
 
-      echo "[2/8] Preseed de MySQL..."
+      echo "[2/9] Preseed de MySQL..."
       echo "mysql-server mysql-server/root_password password ${MYSQL_ROOT_PASS}" | debconf-set-selections
       echo "mysql-server mysql-server/root_password_again password ${MYSQL_ROOT_PASS}" | debconf-set-selections
 
-      echo "[3/8] Instalando Apache + PHP 5.6 + MySQL..."
+      echo "[3/9] Instalando Apache + PHP 5.6 + MySQL..."
       apt-get install -y \
         apache2 \
         mysql-server \
@@ -102,15 +108,16 @@ write_files:
         sed -i 's/^error_reporting = .*/error_reporting = E_ALL \& ~E_NOTICE \& ~E_DEPRECATED \& ~E_STRICT/' "\$PHPINI_APACHE" || \
         echo 'error_reporting = E_ALL & ~E_NOTICE & ~E_DEPRECATED & ~E_STRICT' >> "\$PHPINI_APACHE"
 
-      echo "[5/8] Configurando Apache..."
+      echo "[5/9] Configurando Apache..."
       a2enmod rewrite
       systemctl enable apache2
       systemctl restart apache2
 
-      echo "[6/8] Configurando MySQL..."
+      echo "[6/9] Configurando MySQL..."
       systemctl enable mysql
       systemctl restart mysql
 
+      echo "[7/9] Creando base y usuario..."
       mysql -uroot -p'${MYSQL_ROOT_PASS}' <<SQL
       CREATE DATABASE IF NOT EXISTS ${APP_DB} CHARACTER SET latin1 COLLATE latin1_swedish_ci;
       CREATE USER IF NOT EXISTS '${APP_DB_USER}'@'localhost' IDENTIFIED BY '${APP_DB_PASS}';
@@ -130,7 +137,7 @@ write_files:
       );
       SQL
 
-      echo "[7/8] Preparando directorio web..."
+      echo "[8/9] Preparando directorio web..."
       mkdir -p /var/www/html/app
       chown -R www-data:www-data /var/www/html/app
 
@@ -177,7 +184,7 @@ write_files:
         - y cualquier otro include
       TXT
 
-      echo "[8/8] Provisioning terminado."
+      echo "[9/9] Provisioning terminado."
 
 runcmd:
   - [ bash, /root/provision-legacy.sh ]
@@ -194,21 +201,20 @@ qm create "${VMID}" \
   --memory "${RAM}" \
   --cores "${CORES}" \
   --cpu x86-64-v2-AES \
-  --machine q35 \
-  --bios ovmf \
+  --machine pc \
+  --bios seabios \
   --agent 1 \
+  --vga std \
   --ostype l26 \
-  --scsihw virtio-scsi-pci \
   --net0 virtio,bridge="${BRIDGE}" \
-  --serial0 socket \
-  --vga serial0
+  --scsihw virtio-scsi-pci
 
 qm set "${VMID}" --efidisk0 "${STORAGE}:0,efitype=4m,pre-enrolled-keys=0"
 
 echo "Importando disco cloud..."
 qm importdisk "${VMID}" "${IMAGE_FILE}" "${STORAGE}"
 qm set "${VMID}" --scsi0 "${STORAGE}:vm-${VMID}-disk-1"
-qm set "${VMID}" --boot "order=scsi0"
+qm set "${VMID}" --boot order=scsi0
 qm resize "${VMID}" scsi0 "${DISK_GB}G"
 
 qm set "${VMID}" --ide2 "${CI_STORAGE}:cloudinit"
@@ -216,6 +222,9 @@ qm set "${VMID}" --ciuser "${CIUSER}"
 qm set "${VMID}" --cipassword "${CIPASSWORD}"
 qm set "${VMID}" --ipconfig0 "${IPCONFIG0}"
 qm set "${VMID}" --cicustom "user=${SNIPPET_STORAGE}:snippets/$(basename "${USERDATA_FILE}")"
+
+echo "Configuración final:"
+qm config "${VMID}"
 
 echo "Iniciando VM..."
 qm start "${VMID}"
