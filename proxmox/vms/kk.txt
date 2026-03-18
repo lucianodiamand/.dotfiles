@@ -1,62 +1,3 @@
-#!/usr/bin/env bash
-set -euo pipefail
-
-VMID="${1:-180}"
-NAME="${2:-ubuntu-legacy-docker}"
-RAM="${3:-4096}"
-CORES="${4:-2}"
-DISK_GB="${5:-32}"
-
-BRIDGE="${BRIDGE:-vmbr0}"
-STORAGE="${STORAGE:-local-lvm}"
-CI_STORAGE="${CI_STORAGE:-local-lvm}"
-SNIPPET_STORAGE="${SNIPPET_STORAGE:-local}"
-IMAGE_DIR="${IMAGE_DIR:-/var/lib/vz/template/qemu}"
-SNIPPET_DIR="${SNIPPET_DIR:-/var/lib/vz/snippets}"
-
-IMAGE_URL="${IMAGE_URL:-https://cloud-images.ubuntu.com/jammy/current/jammy-server-cloudimg-amd64.img}"
-IMAGE_FILE="${IMAGE_DIR}/jammy-server-cloudimg-amd64.img"
-
-VM_USER="${VM_USER:-ubuntu}"
-VM_PASS="${VM_PASS:-ubuntu123}"
-
-MYSQL_ROOT_PASS="${MYSQL_ROOT_PASS:-rootlegacy123}"
-APP_DB="${APP_DB:-legacyapp}"
-APP_DB_USER="${APP_DB_USER:-legacyuser}"
-APP_DB_PASS="${APP_DB_PASS:-legacypass123}"
-
-IPCONFIG0="${IPCONFIG0:-ip=dhcp}"
-
-mkdir -p "${IMAGE_DIR}" "${SNIPPET_DIR}"
-
-if [[ ! -f "${IMAGE_FILE}" ]]; then
-  echo "Descargando imagen cloud de Ubuntu 22.04..."
-  wget -O "${IMAGE_FILE}" "${IMAGE_URL}"
-fi
-
-USERDATA_BASENAME="user-data-${VMID}.yaml"
-USERDATA_FILE="${SNIPPET_DIR}/${USERDATA_BASENAME}"
-
-cat > "${USERDATA_FILE}" <<EOF
-#cloud-config
-hostname: ${NAME}
-manage_etc_hosts: true
-
-users:
-  - name: ${VM_USER}
-    sudo: ALL=(ALL) NOPASSWD:ALL
-    groups: sudo,docker
-    shell: /bin/bash
-    lock_passwd: false
-
-ssh_pwauth: true
-disable_root: false
-
-chpasswd:
-  expire: false
-  list: |
-    ${VM_USER}:${VM_PASS}
-
 write_files:
   - path: /root/provision-legacy.sh
     permissions: '0755'
@@ -67,7 +8,7 @@ write_files:
       exec > >(tee -a /var/log/provision-legacy.log) 2>&1
 
       echo "[0/12] Esperando red..."
-      for i in \$(seq 1 60); do
+      for i in $(seq 1 60); do
         if getent hosts archive.ubuntu.com >/dev/null 2>&1; then
           break
         fi
@@ -86,9 +27,9 @@ write_files:
       chmod a+r /etc/apt/keyrings/docker.asc
 
       echo "[4/12] Agregando repo oficial de Docker..."
-      ARCH="\$(dpkg --print-architecture)"
-      CODENAME="\$(. /etc/os-release && echo "\${UBUNTU_CODENAME:-\$VERSION_CODENAME}")"
-      echo "deb [arch=\${ARCH} signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu \${CODENAME} stable" \
+      ARCH="$(dpkg --print-architecture)"
+      CODENAME="$(. /etc/os-release && echo "${UBUNTU_CODENAME:-$VERSION_CODENAME}")"
+      echo "deb [arch=${ARCH} signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu ${CODENAME} stable" \
         > /etc/apt/sources.list.d/docker.list
 
       echo "[5/12] Actualizando índices..."
@@ -168,55 +109,3 @@ write_files:
       echo "[12/12] Levantando contenedores..."
       cd /opt/legacy-app
       docker compose up -d --build
-
-runcmd:
-  - [ bash, /root/provision-legacy.sh ]
-
-final_message: "Provisioning legacy por Docker finalizado."
-EOF
-
-echo "Eliminando VM previa si existía..."
-qm destroy "${VMID}" --purge 1 >/dev/null 2>&1 || true
-
-echo "Creando VM ${VMID} (${NAME})..."
-qm create "${VMID}" \
-  --name "${NAME}" \
-  --memory "${RAM}" \
-  --cores "${CORES}" \
-  --cpu x86-64-v2-AES \
-  --machine pc \
-  --bios seabios \
-  --agent 1 \
-  --ostype l26 \
-  --scsihw virtio-scsi-pci \
-  --net0 virtio,bridge="${BRIDGE}" \
-  --vga std
-
-echo "Importando disco cloud..."
-qm importdisk "${VMID}" "${IMAGE_FILE}" "${STORAGE}"
-
-IMPORTED_VOL="$(qm config "${VMID}" | awk '/^unused0: / {print $2}')"
-if [[ -z "${IMPORTED_VOL}" ]]; then
-  echo "No pude detectar el volumen importado en unused0"
-  qm config "${VMID}"
-  exit 1
-fi
-
-qm set "${VMID}" --scsi0 "${IMPORTED_VOL}"
-qm set "${VMID}" --boot order=scsi0
-qm resize "${VMID}" scsi0 "${DISK_GB}G"
-
-qm set "${VMID}" --ide2 "${CI_STORAGE}:cloudinit"
-qm set "${VMID}" --ipconfig0 "${IPCONFIG0}"
-qm set "${VMID}" --cicustom "user=${SNIPPET_STORAGE}:snippets/${USERDATA_BASENAME}"
-
-qm cloudinit update "${VMID}"
-
-echo "Configuración final:"
-qm config "${VMID}"
-echo "===== user-data efectivo ====="
-qm cloudinit dump "${VMID}" user || true
-
-echo "Iniciando VM..."
-qm start "${VMID}"
-
