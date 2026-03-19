@@ -2,7 +2,7 @@
 set -euo pipefail
 
 VMID="${1:-180}"
-NAME="${2:-ubuntu-legacy-docker}"
+NAME="${2:-cadsp-mat}"
 RAM="${3:-4096}"
 CORES="${4:-2}"
 DISK_GB="${5:-32}"
