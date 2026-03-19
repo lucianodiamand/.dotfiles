@@ -23,7 +23,7 @@ VM_PASS="${VM_PASS:-ubuntu123}"
 MYSQL_ROOT_PASS="${MYSQL_ROOT_PASS:-rootlegacy123}"
 APP_DB="${APP_DB:-uv0062_cadsp}"
 APP_DB_USER="${APP_DB_USER:-uv0062_root}"
-APP_DB_PASS="${APP_DB_PASS:-V8vmkxXZlXev4sLK}"
+APP_DB_PASS="${APP_DB_PASS:-ppp123}"
 
 IPCONFIG0="${IPCONFIG0:-ip=dhcp}"
 
@@ -219,35 +219,4 @@ qm cloudinit dump "${VMID}" user || true
 
 echo "Iniciando VM..."
 qm start "${VMID}"
-
-# docker compose ps
-# docker compose up -d --build
-#
-# docker ps -a
-# docker rm -f legacy-mysql57 legacy-php56 2>/dev/null || true
-# docker network prune -f
-# docker compose up -d --build
-
-# docker exec -it legacy-php56 php -r 'var_dump(function_exists("mysql_query"));'
-
-# http://10.10.10.88
-# http://10.10.10.88/info.php
-
-# scp -r ./tu-proyecto/* ubuntu@10.10.10.88:/tmp/app/
-# cp -r /tmp/app/* /opt/legacy-app/www/
-
-# docker compose restart web
-
-# docker exec -it legacy-php56 getent hosts db
-# docker exec -it legacy-php56 php -r '$fp = fsockopen("db", 3306, $errno, $errstr, 5); var_dump((bool)$fp, $errno, $errstr); if ($fp) fclose($fp);'
-
-# Renombrar en funciones_conexion_lib.php
-# localhost por db.
-
-# scp uv0062_cadsp.sql
-
-# docker exec -it legacy-mysql57 mysql -uroot -prootlegacy123 -e "CREATE DATABASE uv0062_cadsp CHARACTER SET latin1 COLLATE latin1_swedish_ci;"
-# docker exec -it legacy-mysql57 mysql -uroot -prootlegacy123 -e "CREATE USER 'uv0062_root'@'%' IDENTIFIED BY 'V8vmkxXZlXev4sLK';"
-# docker exec -it legacy-mysql57 mysql -uroot -prootlegacy123 -e "GRANT ALL PRIVILEGES ON uv0062_cadsp.* TO 'uv0062_root'@'%'; FLUSH PRIVILEGES;"
-# docker exec -i legacy-mysql57 mysql -uuv0062_root -pV8vmkxXZlXev4sLK uv0062_cadsp < ~/uv0062_cadsp.sql
 
