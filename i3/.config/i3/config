@@ -263,6 +263,7 @@ bar {
         # 3px left/right padding
         #padding 0 3
         status_command i3status
+        tray_output LVDS-1
         #status_command qubes-i3status
 
         # Disable clicking on workspace buttons
