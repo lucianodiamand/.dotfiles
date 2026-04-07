@@ -19,9 +19,7 @@ in {
       exec nvim "$@"
     '')
 
-
     evince
-
 
     home-manager
     networkmanagerapplet
@@ -59,6 +57,7 @@ in {
     smartmontools
     usbutils
     git-filter-repo
+    p7zip
 
     # editors
     ed
