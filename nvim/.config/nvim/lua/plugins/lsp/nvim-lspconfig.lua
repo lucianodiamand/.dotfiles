@@ -6,7 +6,6 @@ return {
 	},
 	enabled = true,
 	config = function()
-		local util = require("lspconfig.util")
 		local cmp_nvim_lsp = require("cmp_nvim_lsp")
 		local lsp = vim.lsp
 
@@ -93,11 +92,15 @@ return {
 			on_attach = on_attach,
 		})
 
+		local angular_root_dir = function(fname)
+			return vim.fs.root(fname, { "angular.json", "project.json", "nx.json" })
+		end
+
 		-- configure angular server
 		setup("angularls", {
 			capabilities = capabilities,
 			on_attach = on_attach,
-			root_dir = util.root_pattern("angular.json", "project.json", "nx.json"),
+			root_dir = angular_root_dir,
 		})
 
 		-- configure lua server (with special settings)
