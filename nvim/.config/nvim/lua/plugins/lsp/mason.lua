@@ -28,7 +28,7 @@ return {
 					--  "prismals",
 					--  "pyright",
 					"jdtls",
-					-- "clangd",
+					"clangd",
 				},
 				automatic_installation = true,
 			})

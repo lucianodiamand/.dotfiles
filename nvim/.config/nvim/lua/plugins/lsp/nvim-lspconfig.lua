@@ -6,9 +6,9 @@ return {
 	},
 	enabled = true,
 	config = function()
-		local lspconfig = require("lspconfig")
 		local util = require("lspconfig.util")
 		local cmp_nvim_lsp = require("cmp_nvim_lsp")
+		local lsp = vim.lsp
 
 		-- Disable inline error messages
 		vim.diagnostic.config({
@@ -22,7 +22,7 @@ return {
 		vim.lsp.handlers["textDocument/signatureHelp"] =
 			vim.lsp.with(vim.lsp.handlers.hover, { border = "single", silent = true })
 		vim.lsp.handlers["textDocument/hover"] =
-			vim.lsp.with(vim.lsp.handlers.hover, { border = "single", silend = true })
+			vim.lsp.with(vim.lsp.handlers.hover, { border = "single", silent = true })
 
 		-- Make float window transparent start
 
@@ -76,30 +76,35 @@ return {
 			vim.fn.sign_define(hl, { text = icon, texthl = hl, numhl = "" })
 		end
 
+		local function setup(server, opts)
+			lsp.config(server, opts)
+			lsp.enable(server)
+		end
+
 		-- configure typescript server with plugin
-		lspconfig["ts_ls"].setup({
+		setup("ts_ls", {
 			capabilities = capabilities,
 			on_attach = on_attach,
 		})
 
 		-- configure html server
-		lspconfig["html"].setup({
+		setup("html", {
 			capabilities = capabilities,
 			on_attach = on_attach,
 		})
 
 		-- configure angular server
-		lspconfig["angularls"].setup({
+		setup("angularls", {
 			capabilities = capabilities,
 			on_attach = on_attach,
 			root_dir = util.root_pattern("angular.json", "project.json", "nx.json"),
 		})
 
 		-- configure lua server (with special settings)
-		lspconfig["lua_ls"].setup({
+		setup("lua_ls", {
 			capabilities = capabilities,
 			on_attach = on_attach,
-      cmd = { "lua-language-server" },
+			cmd = { "lua-language-server" },
 			settings = { -- custom settings for lua
 				Lua = {
 					-- make the language server recognize "vim" global
@@ -118,7 +123,7 @@ return {
 		})
 
 		-- configure css server
-		lspconfig["cssls"].setup({
+		setup("cssls", {
 			capabilities = capabilities,
 			on_attach = on_attach,
 		})
@@ -126,7 +131,7 @@ return {
 		local nproc = string.gsub(vim.fn.system("nproc"), "\n", "")
 
 		-- configure clang server
-		lspconfig["clangd"].setup({
+		setup("clangd", {
 			capabilities = capabilities,
 			on_attach = on_attach,
 			cmd = {
