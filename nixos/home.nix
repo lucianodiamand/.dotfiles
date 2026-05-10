@@ -2,6 +2,14 @@
 
 let
   dotfiles = ../.;
+
+  androidComposition = pkgs.androidenv.composeAndroidPackages {
+    platformVersions = [ "35" ];
+    buildToolsVersions = [ "35.0.0" ];
+    includeEmulator = true;
+  };
+
+  androidSdk = androidComposition.androidSdk;
 in {
   imports = [ ./w3m.nix ./bat.nix ./btop.nix ./zathura.nix ./emacs.nix ./nvim.nix ./ssh.nix ./mail.nix ./git.nix ./rxvt.nix ./i3.nix ./pass.nix ./gpg.nix ./gpt-term.nix ./firefox.nix ];
   home.username = "user";
@@ -18,6 +26,9 @@ in {
     (pkgs.writeShellScriptBin "vim" ''
       exec nvim "$@"
     '')
+
+    ffmpeg
+    squashfsTools
 
     evince
 
@@ -90,7 +101,7 @@ in {
 
     guile
 
-    qemu
+    #qemu
 
     # eca tools
     kicad
@@ -156,7 +167,17 @@ in {
 
     # multimedia
     mpv
+
+    # Android
+    android-studio
+    androidsdk
+    android-tools
   ];
+
+  nixpkgs.config = {
+    allowUnfree = true;
+    android_sdk.accept_license = true;
+  };
 
   fonts.fontconfig.enable = true;
 
