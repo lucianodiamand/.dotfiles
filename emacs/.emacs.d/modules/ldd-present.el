@@ -16,8 +16,6 @@
   (when (bound-and-true-p org-present-mode)
     (setq header-line-format (ldd/org-present--center-title))))
 
-(defvar org-present-mode-map nil)
-
 (defvar-local ldd/org-present--line-numbers nil)
 (defvar-local ldd/org-present--mode-line-format nil)
 (defvar-local ldd/org-present--header-line-format nil)
@@ -40,7 +38,7 @@
 
   (setq-local ldd/org-present--face-remapping face-remapping-alist)
   (setq-local face-remapping-alist '((default (:height 1.5) default)
-                                     (header-line (:height 4.5) variable-pitch)
+                                     (header-line (:height 1.8 :weight bold) variable-pitch)
                                      (org-document-title (:height 1.75) org-document-title)
                                      ;; These were needed before the Wayland transition
                                      ;; (org-code (:height 1.55) org-code)
@@ -84,6 +82,19 @@
     (org-appear-mode -1))
   (org-display-inline-images)
   (ldd/org-present-prepare-slide)
+
+    ;; Evil: bindings locales del buffer
+  (when (featurep 'evil)
+    (evil-local-set-key 'normal (kbd "C-j") #'ldd/org-present-next)
+    (evil-local-set-key 'normal (kbd "C-k") #'ldd/org-present-prev)
+    (evil-local-set-key 'motion (kbd "C-j") #'ldd/org-present-next)
+    (evil-local-set-key 'motion (kbd "C-k") #'ldd/org-present-prev)
+    (evil-local-set-key 'visual (kbd "C-j") #'ldd/org-present-next)
+    (evil-local-set-key 'visual (kbd "C-k") #'ldd/org-present-prev)
+    (evil-local-set-key 'insert (kbd "C-j") #'ldd/org-present-next)
+    (evil-local-set-key 'insert (kbd "C-k") #'ldd/org-present-prev)
+    (evil-normalize-keymaps))
+
   (when (fboundp 'ldd/kill-panel)
     (ldd/kill-panel)))
 
@@ -126,30 +137,15 @@
   (interactive)
   (org-present-prev)
   (ldd/org-present-prepare-slide))
+
 (use-package org-present
   :commands org-present
   :hook ((org-present-mode . ldd/org-present-hook)
-         (org-present-mode-quit . ldd/org-present-quit-hook))
-  :bind (:map org-present-mode-keymap
-              ("C-j" . ldd/org-present-next)
-              ("C-k" . ldd/org-present-prev)
-              ("C-c C-j" . ldd/org-present-next)
-              ("C-c C-k" . ldd/org-present-prev)))
-
-(with-eval-after-load 'org-present
-  (when (keymapp org-present-mode-map)
-    (define-key org-present-mode-map (kbd "C-j") #'ldd/org-present-next)
-    (define-key org-present-mode-map (kbd "C-k") #'ldd/org-present-prev)
-    (with-eval-after-load 'evil
-      (evil-define-key* 'normal org-present-mode-map
-        (kbd "C-j") #'ldd/org-present-next
-        (kbd "C-k") #'ldd/org-present-prev)
-      (evil-define-key* 'motion org-present-mode-map
-        (kbd "C-j") #'ldd/org-present-next
-        (kbd "C-k") #'ldd/org-present-prev))))
+         (org-present-mode-quit . ldd/org-present-quit-hook)))
 
 (with-eval-after-load 'org
   (define-key org-mode-map (kbd "C-c P") #'org-present)
   (define-key org-mode-map (kbd "C-c q") #'org-present-quit))
 
 (provide 'ldd-present)
+
