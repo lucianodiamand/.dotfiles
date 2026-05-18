@@ -172,6 +172,8 @@ in {
     android-studio
     androidsdk
     android-tools
+
+    clang-tools
   ];
 
   nixpkgs.config = {
@@ -204,6 +206,14 @@ in {
   programs.zoxide = {
     enable = true;
     enableZshIntegration = true;
+  };
+
+  programs.emacs = {
+    enable = true;
+
+    extraPackages = epkgs: with epkgs; [
+      treesit-grammars.with-all-grammars
+    ];
   };
 
   programs.zsh = {
