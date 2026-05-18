@@ -231,6 +231,7 @@ in {
 
     shellAliases = {
       rgrep = "grep -r";
+      ctc = "xclip -selection clipboard";
     };
 
     initContent = ''
